@@ -18,6 +18,11 @@ let main_service =
   open Dom
   open Dom_html
 
+  let test_handler td =
+    handler (fun _ -> (td##textContent <- Js.some @@ Js.string "HI"; Js._true))
+
+  (* TODO: When a user clicks on a cell, let them enter information into the cell *)
+
   (* Build a fresh row as a JS Dom element *)
   let rec fresh_row ?(row = None) ~row_num ~ncols () =
     match row with
@@ -27,17 +32,21 @@ let main_service =
       let rn_td = createTd document in
       rn_td##textContent <- (Js.some @@ Js.string @@ string_of_int row_num);
       appendChild init_row rn_td;
-      appendChild init_row (createTd document);
+      let new_td = createTd document in
+      new_td##onclick <- test_handler new_td;
+      appendChild init_row new_td;
       fresh_row ~row:(Some init_row) ~row_num ~ncols ()
     | Some r ->
       if r##cells##length < ncols + 1 (* +1 for row numbering column *)
       then (
-        appendChild r (createTd document);
+        let new_td = createTd document in
+        new_td##onclick <- test_handler new_td;
+        appendChild r new_td;
         fresh_row ~row:(Some r) ~row_num ~ncols ()
       )
       else r
 
-  let rec test_header_row ?(row = None) ~ncols () =
+  let rec header_row ?(row = None) ~ncols () =
     let fresh_td col_num =
       let ftd = createTd document in
       ftd##textContent <- (Js.some @@ Js.string @@ string_of_int col_num);
@@ -51,12 +60,12 @@ let main_service =
       rn_td##textContent <- (Js.some @@ Js.string "SS");
       appendChild init_row rn_td;
       appendChild init_row (fresh_td 1);
-      test_header_row ~row:(Some init_row) ~ncols ()
+      header_row ~row:(Some init_row) ~ncols ()
     | Some r ->
       if r##cells##length < ncols + 1 (* + 1 for row numbering column *)
       then (
         appendChild r (fresh_td r##cells##length);
-        test_header_row ~row:(Some r) ~ncols ()
+        header_row ~row:(Some r) ~ncols ()
       )
       else r
 
@@ -65,7 +74,7 @@ let main_service =
       match table_body with
       | None ->
         let t = createTbody document in
-        appendChild t (test_header_row ~ncols ());
+        appendChild t (header_row ~ncols ());
         t
       | Some t -> t
     in

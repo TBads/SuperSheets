@@ -18,10 +18,26 @@ let main_service =
   open Dom
   open Dom_html
 
-  let test_handler td =
-    handler (fun _ -> (td##textContent <- Js.some @@ Js.string "HI"; Js._true))
+  let escape_cell_handler (td : tableCellElement Js.t) (txt : textAreaElement Js.t) =
+    handler (fun (e : keyboardEvent Js.t) -> (
+      if e##keyCode = 27 (* Escape Key Code *)
+      then (
+        let cell_text = txt##value in
+        removeChild td txt;
+        td##textContent <- Js.some cell_text
+      )
+      else ();
+      Js._true
+    ))
 
-  (* TODO: When a user clicks on a cell, let them enter information into the cell *)
+  let dbl_click_handler td =
+    handler (fun _ -> (
+      td##textContent <- Js.null;
+      let txt = createTextarea document in
+      appendChild td txt;
+      td##onkeyup <- escape_cell_handler td txt;
+      Js._false
+    ))
 
   (* Build a fresh row as a JS Dom element *)
   let rec fresh_row ?(row = None) ~row_num ~ncols () =
@@ -33,14 +49,14 @@ let main_service =
       rn_td##textContent <- (Js.some @@ Js.string @@ string_of_int row_num);
       appendChild init_row rn_td;
       let new_td = createTd document in
-      new_td##onclick <- test_handler new_td;
+      new_td##ondblclick <- dbl_click_handler new_td;
       appendChild init_row new_td;
       fresh_row ~row:(Some init_row) ~row_num ~ncols ()
     | Some r ->
       if r##cells##length < ncols + 1 (* +1 for row numbering column *)
       then (
         let new_td = createTd document in
-        new_td##onclick <- test_handler new_td;
+        new_td##ondblclick <- dbl_click_handler new_td;
         appendChild r new_td;
         fresh_row ~row:(Some r) ~row_num ~ncols ()
       )
@@ -92,7 +108,6 @@ let main_service =
       appendChild tbl tbdy;
       appendChild body tbl
 
-  (* TODO: Function to change the value of a cell *)
 }}
 
 let () =

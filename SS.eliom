@@ -13,23 +13,10 @@ module SS_app =
 let main_service =
   Eliom_service.App.service ~path:[] ~get_params:Eliom_parameter.unit ()
 
-(* Action to save the sheet *)
-let save_action =
-  Eliom_service.Http.post_coservice' ~post_params:(Eliom_parameter.string "sheet_string") ()
-
-let save_button =
-  Eliom_content.Html5.F.post_form ~service:save_action
-  (
-    fun sheet_string ->
-      [
-       string_input ~input_type:`Hidden ~name:sheet_string ~value:"string_sheet value" ();
-       div [button ~button_type:`Submit [pcdata "Save"]]
-      ]
-  )
-
 {server{
 
    let shell_print = server_function Json.t<string> Lwt_io.print
+   (* TODO: Need a function to write the string to disc *)
 
 }}
 
@@ -37,8 +24,6 @@ let save_button =
 
   open Dom
   open Dom_html
-
-  (* TODO: Need a function to write the string to disc *)
 
   (* Keys take the form of row_col, ex. row 1 column 3 has the key "1_3" *)
   let h : (string, string) Hashtbl.t = Hashtbl.create 100
@@ -57,7 +42,7 @@ let save_button =
   let save_ss_handler =
     handler (fun _ ->
         let ss_string = string_of_ss () in
-(* TODO: replace this with an actual server side save function *)
+        (* TODO: replace this with an actual server side save function *)
         let () = ignore @@ %shell_print ss_string in
         Js._true
     )
@@ -177,16 +162,5 @@ let () =
            ~title:"SS"
            ~css:[["css";"SS.css"]]
            Html5.F.(body [
-               h2 [pcdata "Third Goal: Save and retreive the sheet"];
-               save_button ()
+               h2 [pcdata "Third Goal: Save and retreive the sheet"]
            ])))
-
-(* Save Sheet Action *)
-let () =
-  Eliom_registration.Action.register
-    ~options:`NoReload
-    ~service:save_action
-    (fun () sheet_string ->
-       lwt () = Lwt_io.print "Function to save sheet goes here\n" in
-       Lwt_io.print sheet_string
-    )

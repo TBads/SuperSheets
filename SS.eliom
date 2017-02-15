@@ -13,23 +13,74 @@ module SS_app =
 let main_service =
   Eliom_service.App.service ~path:[] ~get_params:Eliom_parameter.unit ()
 
+(* Action to save the sheet *)
+let save_action =
+  Eliom_service.Http.post_coservice' ~post_params:(Eliom_parameter.string "sheet_string") ()
+
+let save_button =
+  Eliom_content.Html5.F.post_form ~service:save_action
+  (
+    fun sheet_string ->
+      [
+       string_input ~input_type:`Hidden ~name:sheet_string ~value:"string_sheet value" ();
+       div [button ~button_type:`Submit [pcdata "Save"]]
+      ]
+  )
+
+{server{
+
+   let shell_print = server_function Json.t<string> Lwt_io.print
+
+}}
+
 {client{
 
   open Dom
   open Dom_html
 
+  (* TODO: Need a function to write the string to disc *)
+
+  (* Keys take the form of row_col, ex. row 1 column 3 has the key "1_3" *)
+  let h : (string, string) Hashtbl.t = Hashtbl.create 100
+
+  let store_cell (key : string) (value : string) =
+    if Hashtbl.mem h key
+    then Hashtbl.replace h key value
+    else Hashtbl.add h key value
+
+  let get_cell key = Hashtbl.find h key
+
+  (* TODO: Maybe this should be JSON? *)
+  let string_of_ss () = Hashtbl.fold (fun k v acc -> (k ^ "," ^ v ^ "\n") ^ acc) h ""
+
+  (* Save the entire contents of the hashtbl to the server *)
+  let save_ss_handler =
+    handler (fun _ ->
+        let ss_string = string_of_ss () in
+(* TODO: replace this with an actual server side save function *)
+        let () = ignore @@ %shell_print ss_string in
+        Js._true
+    )
+
+  let save_button_client () =
+    let btn = createButton document in
+    btn##onmouseup <- save_ss_handler;
+    let body = document##body in
+    appendChild body btn
+
   let escape_cell_handler (td : tableCellElement Js.t) (txt : textAreaElement Js.t) =
     handler (fun (e : keyboardEvent Js.t) -> (
       if e##keyCode = 27 (* Escape Key Code *)
       then (
-        let cell_text = txt##value in
+        store_cell (Js.to_string td##id) (Js.to_string txt##value);
         removeChild td txt;
-        td##textContent <- Js.some cell_text
+        td##textContent <- Js.some txt##value
       )
       else ();
       Js._true
     ))
 
+  (* TODO: If the user double clicks on a cell with data in it, retain the existing string *)
   let dbl_click_handler td =
     handler (fun _ -> (
       td##textContent <- Js.null;
@@ -49,6 +100,8 @@ let main_service =
       rn_td##textContent <- (Js.some @@ Js.string @@ string_of_int row_num);
       appendChild init_row rn_td;
       let new_td = createTd document in
+      (* TODO: Add the row_col id to new_td *)
+      new_td##id <- Js.string "1_1";
       new_td##ondblclick <- dbl_click_handler new_td;
       appendChild init_row new_td;
       fresh_row ~row:(Some init_row) ~row_num ~ncols ()
@@ -56,6 +109,9 @@ let main_service =
       if r##cells##length < ncols + 1 (* +1 for row numbering column *)
       then (
         let new_td = createTd document in
+        (* TODO: Add the row_col id to new_td *)
+        let td_id = (string_of_int row_num) ^ "_" ^ (string_of_int (r##cells##length + 1)) in
+        new_td##id <- Js.string td_id;
         new_td##ondblclick <- dbl_click_handler new_td;
         appendChild r new_td;
         fresh_row ~row:(Some r) ~row_num ~ncols ()
@@ -114,11 +170,23 @@ let () =
   SS_app.register
     ~service:main_service
     (fun () () ->
-      let _ = {unit{fresh_table ~nrows:10 ~ncols:10 ()}} in
+     let _ = {unit{fresh_table ~nrows:10 ~ncols:10 ()}} in
+     let _ = {unit{save_button_client ()}} in
       Lwt.return
         (Eliom_tools.F.html
            ~title:"SS"
            ~css:[["css";"SS.css"]]
            Html5.F.(body [
-               h2 [pcdata "Second Goal: Click and change cell values!"]
+               h2 [pcdata "Third Goal: Save and retreive the sheet"];
+               save_button ()
            ])))
+
+(* Save Sheet Action *)
+let () =
+  Eliom_registration.Action.register
+    ~options:`NoReload
+    ~service:save_action
+    (fun () sheet_string ->
+       lwt () = Lwt_io.print "Function to save sheet goes here\n" in
+       Lwt_io.print sheet_string
+    )

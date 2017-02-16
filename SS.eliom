@@ -15,8 +15,25 @@ let main_service =
 
 {server{
 
-   let shell_print = server_function Json.t<string> Lwt_io.print
-   (* TODO: Need a function to write the string to disc *)
+ let shell_print = server_function Json.t<string> Lwt_io.print
+
+ let store_to_disc s =
+   let open Lwt_unix in
+   lwt fd =
+     Lwt_unix.openfile
+       "Sheets/TestUser1/TestSheet.ss"
+       [O_WRONLY; O_APPEND; O_CREAT; O_TRUNC]
+       0o640
+   in
+   let oc = Lwt_io.of_fd ~mode:Lwt_io.Output fd in
+   try_lwt
+     Lwt_io.write oc s >>
+     Lwt_io.close oc
+   with _ -> Lwt_io.close oc
+
+  let store_to_disc' = server_function Json.t<string> store_to_disc
+
+  (* TODO: Reload the old spreadsheet data when the page is loaded *)
 
 }}
 
@@ -44,11 +61,13 @@ let main_service =
         let ss_string = string_of_ss () in
         (* TODO: replace this with an actual server side save function *)
         let () = ignore @@ %shell_print ss_string in
+        let () = ignore @@ %store_to_disc' ss_string in
         Js._true
     )
 
   let save_button_client () =
     let btn = createButton document in
+    btn##textContent <- Js.some @@ Js.string "Save";
     btn##onmouseup <- save_ss_handler;
     let body = document##body in
     appendChild body btn
@@ -86,7 +105,7 @@ let main_service =
       appendChild init_row rn_td;
       let new_td = createTd document in
       (* TODO: Add the row_col id to new_td *)
-      new_td##id <- Js.string "1_1";
+      new_td##id <- Js.string ((string_of_int row_num) ^ "_1");
       new_td##ondblclick <- dbl_click_handler new_td;
       appendChild init_row new_td;
       fresh_row ~row:(Some init_row) ~row_num ~ncols ()
@@ -95,7 +114,7 @@ let main_service =
       then (
         let new_td = createTd document in
         (* TODO: Add the row_col id to new_td *)
-        let td_id = (string_of_int row_num) ^ "_" ^ (string_of_int (r##cells##length + 1)) in
+        let td_id = (string_of_int row_num) ^ "_" ^ (string_of_int (r##cells##length)) in
         new_td##id <- Js.string td_id;
         new_td##ondblclick <- dbl_click_handler new_td;
         appendChild r new_td;

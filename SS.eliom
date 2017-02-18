@@ -15,25 +15,37 @@ let main_service =
 
 {server{
 
- let shell_print = server_function Json.t<string> Lwt_io.print
+  (* Print a string to the server side shell -- for testing *)
+  let shell_print = server_function Json.t<string> Lwt_io.print
 
- let store_to_disc s =
-   let open Lwt_unix in
-   lwt fd =
-     Lwt_unix.openfile
-       "Sheets/TestUser1/TestSheet.ss"
-       [O_WRONLY; O_APPEND; O_CREAT; O_TRUNC]
-       0o640
-   in
-   let oc = Lwt_io.of_fd ~mode:Lwt_io.Output fd in
-   try_lwt
-     Lwt_io.write oc s >>
-     Lwt_io.close oc
-   with _ -> Lwt_io.close oc
+  let store_to_disc s =
+    let open Lwt_unix in
+    lwt fd =
+      Lwt_unix.openfile
+        "Sheets/TestUser1/TestSheet.ss"
+        [O_WRONLY; O_APPEND; O_CREAT; O_TRUNC]
+        0o640
+    in
+    let oc = Lwt_io.of_fd ~mode:Lwt_io.Output fd in
+    try_lwt
+      Lwt_io.write oc s >>
+      Lwt_io.close oc
+    with _ -> Lwt_io.close oc
 
-  let store_to_disc' = server_function Json.t<string> store_to_disc
+    let store_to_disc' = server_function Json.t<string> store_to_disc
 
   (* TODO: Reload the old spreadsheet data when the page is loaded *)
+  let load_from_disc () =
+    let open Lwt_unix in
+    lwt fd = Lwt_unix.openfile "Sheets/TestUser1/TestSheet.ss" [O_RDONLY] 0o640 in
+    let ic = Lwt_io.of_fd ~mode:Lwt_io.Input fd in
+    try_lwt
+      lwt contents = Lwt_io.read ic in
+      Lwt_io.close ic >>
+      Lwt.return contents
+    with _ -> Lwt_io.close ic >> Lwt.return ""
+
+  let load_from_disc' = server_function Json.t<unit> load_from_disc
 
 }}
 
@@ -52,20 +64,63 @@ let main_service =
 
   let get_cell key = Hashtbl.find h key
 
-  (* TODO: Maybe this should be JSON? *)
-  let string_of_ss () = Hashtbl.fold (fun k v acc -> (k ^ "," ^ v ^ "\n") ^ acc) h ""
+  let json_string_of_ss () =
+    let json_content =
+      Hashtbl.fold (fun k v acc -> acc ^ "\"" ^ k ^ "\":" ^ "\"" ^ v ^ "\",") h "{"
+      |> fun json_string -> String.sub json_string 0 (String.length json_string - 1)
+    in
+    json_content ^ "}"
+
+  (* Parse a spreadsheet string into a [key, value] list *)
+  let parse_ss_string ss_string =
+    let json = Yojson.Basic.from_string ss_string in
+    let keys = Yojson.Basic.Util.keys json in
+    let values = Yojson.Basic.Util.values json in
+    List.map2 (fun k v -> match v with | `String s -> [k; s] | _ -> []) keys values
+    |> List.filter (fun l -> List.length l > 0)
+
+  (* Clear all data out of h, and replace it with the new input [key, value] list *)
+  let replace_h kv_list =
+    Hashtbl.clear h;
+    List.iter (fun (kv : string list) -> store_cell (List.hd kv) (List.nth kv 1)) kv_list
+
+  let update_td id txt =
+    try
+      let td = getElementById id in
+      td##textContent <- (Js.some @@ Js.string txt)
+    with _ -> ()
+
+  (* Update the DOM with spreadsheet data loaded from disc *)
+  let load_and_update () =
+    lwt ss_string = %load_from_disc' () in
+    let kv_list = parse_ss_string ss_string in
+    replace_h kv_list;
+    Hashtbl.iter (fun k v -> update_td k v) h;
+    Lwt.return_unit
 
   (* Save the entire contents of the hashtbl to the server *)
   let save_ss_handler =
     handler (fun _ ->
-        let ss_string = string_of_ss () in
-        (* TODO: replace this with an actual server side save function *)
-        let () = ignore @@ %shell_print ss_string in
+        let ss_string = json_string_of_ss () in
         let () = ignore @@ %store_to_disc' ss_string in
         Js._true
     )
 
-  let save_button_client () =
+  (* TODO: Load the entire contents of the spreadsheet from the server *)
+  let load_ss_handler =
+    handler (fun _ ->
+        let () = ignore @@ load_and_update () in
+        Js._true
+    )
+
+  let load_button () =
+    let btn = createButton document in
+    btn##textContent <- Js.some @@ Js.string "Load";
+    btn##onmouseup <- load_ss_handler;
+    let body = document##body in
+    appendChild body btn
+
+  let save_button () =
     let btn = createButton document in
     btn##textContent <- Js.some @@ Js.string "Save";
     btn##onmouseup <- save_ss_handler;
@@ -164,6 +219,7 @@ let main_service =
       let tbl = createTable document in
       tbl##width <- Js.string "80%";
       tbl##border <- Js.string "1";
+      tbl##id <- Js.string "main_table";
       let body = document##body in
       appendChild tbl tbdy;
       appendChild body tbl
@@ -175,7 +231,8 @@ let () =
     ~service:main_service
     (fun () () ->
      let _ = {unit{fresh_table ~nrows:10 ~ncols:10 ()}} in
-     let _ = {unit{save_button_client ()}} in
+     let _ = {unit{save_button ()}} in
+     let _ = {unit{load_button ()}} in
       Lwt.return
         (Eliom_tools.F.html
            ~title:"SS"

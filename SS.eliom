@@ -54,6 +54,21 @@ let main_service =
   open Dom
   open Dom_html
 
+  (* Parameters *)
+  let cell_background_color = "#ededed"
+
+  (* Currently selected cell *)
+  let (selected_cell : string option ref) = ref None
+
+  (* Cells that will be selected when when the user uses arrow keys *)
+  let (up_cell : string option ref)    = ref None
+  let (down_cell : string option ref)  = ref None
+  let (left_cell : string option ref)  = ref None
+  let (right_cell : string option ref) = ref None
+
+  let max_row = ref 0
+  let max_col = ref 0
+
   (* Keys take the form of row_col, ex. row 1 column 3 has the key "1_3" *)
   let h : (string, string) Hashtbl.t = Hashtbl.create 100
 
@@ -139,6 +154,21 @@ let main_service =
       Js._true
     )
 
+  let shift_release_action td =
+    ignore @@ %shell_print "\nshift_release_action called";
+    match !selected_cell with
+    | None -> ()
+    | Some id ->
+      let sc = getElementById id in
+      sc##style##backgroundColor <- Js.string cell_background_color
+
+  let shift_press_action () =
+    match !selected_cell with
+    | None -> ()
+    | Some id ->
+      let sc = getElementById id in
+      sc##style##backgroundColor <- Js.string "yellow"
+
   (* TODO: If the user double clicks on a cell with data in it, retain the existing string *)
   let dbl_click_handler td =
     handler (fun _ ->
@@ -148,18 +178,6 @@ let main_service =
       td##onkeyup <- escape_cell_handler td txt;
       Js._false
     )
-
-  (* Currently selected cell *)
-  let (selected_cell : string option ref) = ref None
-
-  (* Cells that will be selected when when the user uses arrow keys *)
-  let (up_cell : string option ref)    = ref None
-  let (down_cell : string option ref)  = ref None
-  let (left_cell : string option ref)  = ref None
-  let (right_cell : string option ref) = ref None
-
-  let max_row = ref 0
-  let max_col = ref 0
 
   (* Return the (up, down, left, right) cell ids *)
   let surrounding_cells id =
@@ -256,15 +274,23 @@ let main_service =
     | None, Some right_id -> () (* Note: This case should never happen *)
 
   (* Note: up = 38, down = 40, left = 37, right = 39 *)
-  let arrow_key_handler =
+  let key_handler =
     handler (fun key_press ->
       match key_press##keyCode with
       | 38 -> up_arrow_action (); Js._true
       | 40 -> down_arrow_action (); Js._true
       | 37 -> left_arrow_action (); Js._true
       | 39 -> right_arrow_action (); Js._true
-      | _ -> (); Js._true
-    )
+      | 16 -> shift_press_action (); Js._true
+      | _ as kc -> ignore @@ %shell_print ("\nkey pressed = " ^ (string_of_int kc)); Js._true
+      )
+
+  let key_release_handler =
+    handler (fun key_release ->
+        match key_release##keyCode with
+        | 16 -> shift_release_action (); Js._true
+        | _ as kr -> ignore @@ %shell_print ("\nkey released = " ^ (string_of_int kr)); Js._true
+      )
 
   (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
   let click_handler (td : tableCellElement Js.t) =
@@ -292,7 +318,7 @@ let main_service =
   (* Create a new & empty cell *)
   let new_cell id =
     let td = createTd document in
-    td##style##backgroundColor <- Js.string "#ededed";
+    td##style##backgroundColor <- Js.string cell_background_color;
     td##style##width           <- Js.string "70px";
     td##style##minWidth        <- Js.string "70px";
     td##style##maxWidth        <- Js.string "70px";
@@ -313,14 +339,14 @@ let main_service =
     rn_td##style##height    <- Js.string "25px";
     rn_td
 
-(* Create a new column number cell *)
-let new_col_number_cell col_num =
-  let ftd = createTd document in
-  ftd##textContent      <- (Js.some @@ Js.string @@ string_of_int col_num);
-  ftd##style##textAlign <- Js.string "center";
-  ftd##style##width     <- Js.string "70px";
-  ftd##style##height    <- Js.string "25px";
-  ftd
+  (* Create a new column number cell *)
+  let new_col_number_cell col_num =
+    let ftd = createTd document in
+    ftd##textContent      <- (Js.some @@ Js.string @@ string_of_int col_num);
+    ftd##style##textAlign <- Js.string "center";
+    ftd##style##width     <- Js.string "70px";
+    ftd##style##height    <- Js.string "25px";
+    ftd
 
   (* Build a fresh row as a JS Dom element *)
   let rec fresh_row ?(row = None) ~row_num ~ncols () =
@@ -386,7 +412,8 @@ let new_col_number_cell col_num =
       tbl##id <- Js.string "main_table";
       tbl##style##borderCollapse <- Js.string "collapse";
       let body = document##body in
-      body##onkeydown <- arrow_key_handler;
+      body##onkeydown <- key_handler;
+      body##onkeyup <- key_release_handler;
       appendChild tbl tbdy;
       appendChild body tbl
 

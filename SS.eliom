@@ -149,9 +149,123 @@ let main_service =
       Js._false
     )
 
+  (* Currently selected cell *)
   let (selected_cell : string option ref) = ref None
 
-  (* TODO: If the user selects a cell, then they sould be able to use the keypad *)
+  (* Cells that will be selected when when the user uses arrow keys *)
+  let (up_cell : string option ref)    = ref None
+  let (down_cell : string option ref)  = ref None
+  let (left_cell : string option ref)  = ref None
+  let (right_cell : string option ref) = ref None
+
+  let max_row = ref 0
+  let max_col = ref 0
+
+  (* Return the (up, down, left, right) cell ids *)
+  let surrounding_cells id =
+    let row = String.sub id 0 (String.index id '_') in
+    let row_i = int_of_string row in
+    let col = String.sub id (String.index id '_' + 1) (String.length id - String.length row - 1) in
+    let col_i = int_of_string col in
+    let up =
+      if 1 <= row_i - 1
+      then Some (string_of_int (row_i - 1) ^ "_" ^ col)
+      else None
+    in
+    let down =
+      if row_i + 1 <= !max_row
+      then Some (string_of_int (row_i + 1) ^ "_" ^ col)
+      else None
+    in
+    let left =
+      if 1 <= col_i - 1
+      then Some (row ^ "_" ^ string_of_int (col_i - 1))
+      else None in
+    let right =
+      if col_i + 1 <= !max_col
+      then Some (row ^ "_" ^ string_of_int (col_i + 1))
+      else None
+    in
+    (up, down, left, right)
+
+  let register_key_events id =
+    let up, down, left, right = surrounding_cells id in
+     up_cell := up;
+     down_cell := down;
+     left_cell := left;
+     right_cell := right
+
+  (* Actions for an up arrow *)
+  let up_arrow_action () =
+    match !selected_cell, !up_cell with
+    | None, None -> ()
+    | _, None -> ()
+    | Some s_id, Some up_id -> (
+        let sc = getElementById s_id in
+        let uc = getElementById up_id in
+        sc##style##border <- Js.string "1px solid black";
+        selected_cell := Some up_id;
+        uc##style##border <- Js.string "3px solid black";
+        register_key_events @@ Js.to_string uc##id
+      )
+    | None, Some up_id -> () (* Note: This case should never happen *)
+
+  (* Actions for a down arrow *)
+  let down_arrow_action () =
+    match !selected_cell, !down_cell with
+    | None, None -> ()
+    | _, None -> ()
+    | Some s_id, Some down_id -> (
+        let sc = getElementById s_id in
+        let dc = getElementById down_id in
+        sc##style##border <- Js.string "1px solid black";
+        selected_cell := Some down_id;
+        dc##style##border <- Js.string "3px solid black";
+        register_key_events @@ Js.to_string dc##id
+      )
+    | None, Some down_id -> () (* Note: This case should never happen *)
+
+  (* Actions for a left arrow *)
+  let left_arrow_action () =
+    match !selected_cell, !left_cell with
+    | None, None -> ()
+    | _, None -> ()
+    | Some s_id, Some left_id -> (
+        let sc = getElementById s_id in
+        let lc = getElementById left_id in
+        sc##style##border <- Js.string "1px solid black";
+        selected_cell := Some left_id;
+        lc##style##border <- Js.string "3px solid black";
+        register_key_events @@ Js.to_string lc##id
+      )
+    | None, Some down_id -> () (* Note: This case should never happen *)
+
+  (* Actions for a right arrow *)
+  let right_arrow_action () =
+    match !selected_cell, !right_cell with
+    | None, None -> ()
+    | _, None -> ()
+    | Some s_id, Some right_id -> (
+        let sc = getElementById s_id in
+        let rc = getElementById right_id in
+        sc##style##border <- Js.string "1px solid black";
+        selected_cell := Some right_id;
+        rc##style##border <- Js.string "3px solid black";
+        register_key_events @@ Js.to_string rc##id
+      )
+    | None, Some right_id -> () (* Note: This case should never happen *)
+
+  (* Note: up = 38, down = 40, left = 37, right = 39 *)
+  let arrow_key_handler =
+    handler (fun key_press ->
+      match key_press##keyCode with
+      | 38 -> up_arrow_action (); Js._true
+      | 40 -> down_arrow_action (); Js._true
+      | 37 -> left_arrow_action (); Js._true
+      | 39 -> right_arrow_action (); Js._true
+      | _ -> (); Js._true
+    )
+
   (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
   let click_handler (td : tableCellElement Js.t) =
     handler (fun (clk : mouseEvent Js.t) ->
@@ -160,13 +274,15 @@ let main_service =
         match !selected_cell with
         | None -> (
             selected_cell := Some (Js.to_string td##id);
-            td##style##border <- Js.string "3px solid black"
+            td##style##border <- Js.string "3px solid black";
+            register_key_events @@ Js.to_string td##id
           )
         | Some id -> (
             let c = getElementById id in
             c##style##border <- Js.string "1px solid black";
             selected_cell := Some (Js.to_string td##id);
-            td##style##border <- Js.string "3px solid black"
+            td##style##border <- Js.string "3px solid black";
+            register_key_events @@ Js.to_string td##id
           )
       )
       else ();
@@ -262,12 +378,15 @@ let new_col_number_cell col_num =
       fresh_table ~table_body:(Some tbdy) ~nrows ~ncols ()
     )
     else
+      max_row := nrows;
+      max_col := ncols;
       let tbl = createTable document in
       (*tbl##width <- Js.string "80%";*)
       tbl##border <- Js.string "1";
       tbl##id <- Js.string "main_table";
       tbl##style##borderCollapse <- Js.string "collapse";
       let body = document##body in
+      body##onkeydown <- arrow_key_handler;
       appendChild tbl tbdy;
       appendChild body tbl
 

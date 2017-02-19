@@ -106,7 +106,7 @@ let main_service =
         Js._true
     )
 
-  (* TODO: Load the entire contents of the spreadsheet from the server *)
+  (* Load the entire contents of the spreadsheet from the server *)
   let load_ss_handler =
     handler (fun _ ->
         let () = ignore @@ load_and_update () in
@@ -128,7 +128,7 @@ let main_service =
     appendChild body btn
 
   let escape_cell_handler (td : tableCellElement Js.t) (txt : textAreaElement Js.t) =
-    handler (fun (e : keyboardEvent Js.t) -> (
+    handler (fun (e : keyboardEvent Js.t) ->
       if e##keyCode = 27 (* Escape Key Code *)
       then (
         store_cell (Js.to_string td##id) (Js.to_string txt##value);
@@ -137,17 +137,74 @@ let main_service =
       )
       else ();
       Js._true
-    ))
+    )
 
   (* TODO: If the user double clicks on a cell with data in it, retain the existing string *)
   let dbl_click_handler td =
-    handler (fun _ -> (
+    handler (fun _ ->
       td##textContent <- Js.null;
       let txt = createTextarea document in
       appendChild td txt;
       td##onkeyup <- escape_cell_handler td txt;
       Js._false
-    ))
+    )
+
+  let (selected_cell : string option ref) = ref None
+
+  (* TODO: If the user selects a cell, then they sould be able to use the keypad *)
+  (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
+  let click_handler (td : tableCellElement Js.t) =
+    handler (fun (clk : mouseEvent Js.t) ->
+      if clk##button = 0
+      then (
+        match !selected_cell with
+        | None -> (
+            selected_cell := Some (Js.to_string td##id);
+            td##style##border <- Js.string "3px solid black"
+          )
+        | Some id -> (
+            let c = getElementById id in
+            c##style##border <- Js.string "1px solid black";
+            selected_cell := Some (Js.to_string td##id);
+            td##style##border <- Js.string "3px solid black"
+          )
+      )
+      else ();
+      Js._true
+    )
+
+  (* Create a new & empty cell *)
+  let new_cell id =
+    let td = createTd document in
+    td##style##backgroundColor <- Js.string "#ededed";
+    td##style##width           <- Js.string "70px";
+    td##style##minWidth        <- Js.string "70px";
+    td##style##maxWidth        <- Js.string "70px";
+    td##style##height          <- Js.string "25px";
+    td##style##maxHeight       <- Js.string "25px";
+    td##style##overflow        <- Js.string "hidden";
+    td##id                     <- Js.string id;
+    td##ondblclick             <- dbl_click_handler td;
+    td##onmousedown            <- click_handler td;
+    td
+
+  (* Create a new row number cell *)
+  let new_row_number_cell row_num =
+    let rn_td = createTd document in
+    rn_td##textContent      <- Js.some @@ Js.string @@ string_of_int row_num;
+    rn_td##style##textAlign <- Js.string "center";
+    rn_td##style##width     <- Js.string "20px";
+    rn_td##style##height    <- Js.string "25px";
+    rn_td
+
+(* Create a new column number cell *)
+let new_col_number_cell col_num =
+  let ftd = createTd document in
+  ftd##textContent      <- (Js.some @@ Js.string @@ string_of_int col_num);
+  ftd##style##textAlign <- Js.string "center";
+  ftd##style##width     <- Js.string "70px";
+  ftd##style##height    <- Js.string "25px";
+  ftd
 
   (* Build a fresh row as a JS Dom element *)
   let rec fresh_row ?(row = None) ~row_num ~ncols () =
@@ -155,47 +212,36 @@ let main_service =
     | None ->
       (* Initialize the row and append the row number and an empty td *)
       let init_row = createTr document in
-      let rn_td = createTd document in
-      rn_td##textContent <- (Js.some @@ Js.string @@ string_of_int row_num);
+      let rn_td = new_row_number_cell row_num in
       appendChild init_row rn_td;
-      let new_td = createTd document in
-      (* TODO: Add the row_col id to new_td *)
-      new_td##id <- Js.string ((string_of_int row_num) ^ "_1");
-      new_td##ondblclick <- dbl_click_handler new_td;
+      let new_td = new_cell ((string_of_int row_num) ^ "_1") in
       appendChild init_row new_td;
       fresh_row ~row:(Some init_row) ~row_num ~ncols ()
     | Some r ->
       if r##cells##length < ncols + 1 (* +1 for row numbering column *)
       then (
-        let new_td = createTd document in
-        (* TODO: Add the row_col id to new_td *)
         let td_id = (string_of_int row_num) ^ "_" ^ (string_of_int (r##cells##length)) in
-        new_td##id <- Js.string td_id;
-        new_td##ondblclick <- dbl_click_handler new_td;
+        let new_td = new_cell td_id in
         appendChild r new_td;
         fresh_row ~row:(Some r) ~row_num ~ncols ()
       )
       else r
 
   let rec header_row ?(row = None) ~ncols () =
-    let fresh_td col_num =
-      let ftd = createTd document in
-      ftd##textContent <- (Js.some @@ Js.string @@ string_of_int col_num);
-      ftd
-    in
     match row with
     | None ->
       (* Initialize the row and append the row number and an empty td *)
       let init_row = createTr document in
       let rn_td = createTd document in
       rn_td##textContent <- (Js.some @@ Js.string "SS");
+      rn_td##style##textAlign <- Js.string "center";
       appendChild init_row rn_td;
-      appendChild init_row (fresh_td 1);
+      appendChild init_row (new_col_number_cell 1);
       header_row ~row:(Some init_row) ~ncols ()
     | Some r ->
       if r##cells##length < ncols + 1 (* + 1 for row numbering column *)
       then (
-        appendChild r (fresh_td r##cells##length);
+        appendChild r (new_col_number_cell r##cells##length);
         header_row ~row:(Some r) ~ncols ()
       )
       else r
@@ -217,9 +263,10 @@ let main_service =
     )
     else
       let tbl = createTable document in
-      tbl##width <- Js.string "80%";
+      (*tbl##width <- Js.string "80%";*)
       tbl##border <- Js.string "1";
       tbl##id <- Js.string "main_table";
+      tbl##style##borderCollapse <- Js.string "collapse";
       let body = document##body in
       appendChild tbl tbdy;
       appendChild body tbl
@@ -238,5 +285,4 @@ let () =
            ~title:"SS"
            ~css:[["css";"SS.css"]]
            Html5.F.(body [
-               h2 [pcdata "Third Goal: Save and retreive the sheet"]
            ])))

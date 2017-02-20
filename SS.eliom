@@ -54,25 +54,45 @@ let main_service =
   open Dom
   open Dom_html
 
+  type cell = {
+    row : int;
+    col : int;
+    id  : string;
+    txt : string
+  }
+
   (* Parameters *)
   let cell_background_color = "#ededed"
 
   (* Currently selected cell *)
-  let (selected_cell : string option ref) = ref None
+  let (selected_cell : cell option ref) = ref None
 
   (* Cells that will be selected when when the user uses arrow keys *)
-  let (up_cell : string option ref)    = ref None
-  let (down_cell : string option ref)  = ref None
-  let (left_cell : string option ref)  = ref None
-  let (right_cell : string option ref) = ref None
+  let (up_cell : cell option ref)    = ref None
+  let (down_cell : cell option ref)  = ref None
+  let (left_cell : cell option ref)  = ref None
+  let (right_cell : cell option ref) = ref None
 
+  (* Current min and max rows of the sheet *)
   let max_row = ref 0
   let max_col = ref 0
 
-  (* Keys take the form of row_col, ex. row 1 column 3 has the key "1_3" *)
-  let h : (string, string) Hashtbl.t = Hashtbl.create 100
+  (* Starting position when the shift key is pressed *)
+  let (shift_start : cell option ref) = ref None
 
-  let store_cell (key : string) (value : string) =
+  (* Current area selected with shift *)
+  let (shift_area : cell list option ref) = ref None
+
+  (* cells that will be highlighted if shift + and arrow key is used *)
+  let (shift_up : cell list option ref) = ref None
+  let (shift_down : cell list option ref) = ref None
+  let (shift_left : cell list option ref) = ref None
+  let (shift_right : cell list option ref) = ref None
+
+  (* Keys take the form of row_col, ex. row 1 column 3 has the key "1_3" *)
+  let h : ((int * int), string) Hashtbl.t = Hashtbl.create 100
+
+  let store_cell (key : int * int) (value : string) =
     if Hashtbl.mem h key
     then Hashtbl.replace h key value
     else Hashtbl.add h key value
@@ -81,25 +101,41 @@ let main_service =
 
   let json_string_of_ss () =
     let json_content =
-      Hashtbl.fold (fun k v acc -> acc ^ "\"" ^ k ^ "\":" ^ "\"" ^ v ^ "\",") h "{"
+      Hashtbl.fold (fun k v acc ->
+          acc ^ "\"" ^ ((string_of_int @@ fst k) ^ "_" ^ (string_of_int @@ snd k)) ^
+          "\":" ^ "\"" ^ v ^ "\","
+        ) h "{"
       |> fun json_string -> String.sub json_string 0 (String.length json_string - 1)
     in
     json_content ^ "}"
 
-  (* Parse a spreadsheet string into a [key, value] list *)
-  let parse_ss_string ss_string =
+  let row_of_id (id : string) =
+    String.sub id 0 (String.index id '_') |> int_of_string
+
+  let col_of_id (id : string) =
+    let row = string_of_int @@ row_of_id id in
+    String.sub id (String.index id '_' + 1) (String.length id - String.length row - 1)
+    |> int_of_string
+
+  let key_of_id (id : string) =
+    (row_of_id id, col_of_id id)
+
+  (* Parse a spreadsheet string into a (key, value) list *)
+  let parse_ss_string (ss_string : string) =
     let json = Yojson.Basic.from_string ss_string in
     let keys = Yojson.Basic.Util.keys json in
     let values = Yojson.Basic.Util.values json in
     List.map2 (fun k v -> match v with | `String s -> [k; s] | _ -> []) keys values
     |> List.filter (fun l -> List.length l > 0)
+    |> List.map (fun sl -> ((row_of_id @@ List.hd sl, col_of_id @@ List.hd sl), List.nth sl 1))
 
   (* Clear all data out of h, and replace it with the new input [key, value] list *)
-  let replace_h kv_list =
+  let replace_h (kv_list :  ((int * int) * string) list) =
     Hashtbl.clear h;
-    List.iter (fun (kv : string list) -> store_cell (List.hd kv) (List.nth kv 1)) kv_list
+    List.iter (fun (kv : (int * int) * string) -> store_cell (fst kv) (snd kv)) kv_list
 
-  let update_td id txt =
+  let update_td (rc : int * int) txt =
+    let id = (string_of_int @@ fst rc) ^ "_" ^ (string_of_int @@ snd rc) in
     try
       let td = getElementById id in
       td##textContent <- (Js.some @@ Js.string txt)
@@ -108,9 +144,9 @@ let main_service =
   (* Update the DOM with spreadsheet data loaded from disc *)
   let load_and_update () =
     lwt ss_string = %load_from_disc' () in
-    let kv_list = parse_ss_string ss_string in
+    let (kv_list : ((int * int) * string) list) = parse_ss_string ss_string in
     replace_h kv_list;
-    Hashtbl.iter (fun k v -> update_td k v) h;
+    Hashtbl.iter (fun (k : int * int) (v : string) -> update_td k v) h;
     Lwt.return_unit
 
   (* Save the entire contents of the hashtbl to the server *)
@@ -146,7 +182,7 @@ let main_service =
     handler (fun (e : keyboardEvent Js.t) ->
       if e##keyCode = 27 (* Escape Key Code *)
       then (
-        store_cell (Js.to_string td##id) (Js.to_string txt##value);
+        store_cell (key_of_id @@ Js.to_string td##id) (Js.to_string txt##value);
         removeChild td txt;
         td##textContent <- Js.some txt##value
       )
@@ -158,16 +194,38 @@ let main_service =
     ignore @@ %shell_print "\nshift_release_action called";
     match !selected_cell with
     | None -> ()
-    | Some id ->
-      let sc = getElementById id in
+    | Some c ->
+      let sc = getElementById c.id in
+      shift_start := None;
       sc##style##backgroundColor <- Js.string cell_background_color
+
+  let shift_surrounding_cells id = ()
+
+
+  let register_shift_events id =
+    (*let up, down, left, right = shift_surrounding_cells id in*)
+    ()
+
+  (* Given an element id, get the cell *)
+  let cell_of_id (id : string) =
+    try
+    let c = getElementById id in
+    Some {
+      row = row_of_id id;
+      col = col_of_id id;
+      id  = id;
+      txt = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "")
+    }
+    with _ -> None (* TODO: Log/Handle specific errors here *)
 
   let shift_press_action () =
     match !selected_cell with
     | None -> ()
-    | Some id ->
-      let sc = getElementById id in
+    | Some c ->
+      let sc = getElementById c.id in
+      shift_start := cell_of_id @@ Js.to_string sc##id;
       sc##style##backgroundColor <- Js.string "yellow"
+      (* TODO: Register the *)
 
   (* TODO: If the user double clicks on a cell with data in it, retain the existing string *)
   let dbl_click_handler td =
@@ -180,33 +238,33 @@ let main_service =
     )
 
   (* Return the (up, down, left, right) cell ids *)
-  let surrounding_cells id =
-    let row = String.sub id 0 (String.index id '_') in
-    let row_i = int_of_string row in
-    let col = String.sub id (String.index id '_' + 1) (String.length id - String.length row - 1) in
-    let col_i = int_of_string col in
+  let surrounding_cells (id : string) =
+    let row_i = row_of_id id in
+    let row = string_of_int row_i in
+    let col_i = col_of_id id in
+    let col = string_of_int col_i in
     let up =
       if 1 <= row_i - 1
-      then Some (string_of_int (row_i - 1) ^ "_" ^ col)
+      then cell_of_id (string_of_int (row_i - 1) ^ "_" ^ col)
       else None
     in
     let down =
       if row_i + 1 <= !max_row
-      then Some (string_of_int (row_i + 1) ^ "_" ^ col)
+      then cell_of_id (string_of_int (row_i + 1) ^ "_" ^ col)
       else None
     in
     let left =
       if 1 <= col_i - 1
-      then Some (row ^ "_" ^ string_of_int (col_i - 1))
+      then cell_of_id (row ^ "_" ^ string_of_int (col_i - 1))
       else None in
     let right =
       if col_i + 1 <= !max_col
-      then Some (row ^ "_" ^ string_of_int (col_i + 1))
+      then cell_of_id (row ^ "_" ^ string_of_int (col_i + 1))
       else None
     in
     (up, down, left, right)
 
-  let register_key_events id =
+  let register_key_events (id : string) =
     let up, down, left, right = surrounding_cells id in
      up_cell := up;
      down_cell := down;
@@ -218,11 +276,11 @@ let main_service =
     match !selected_cell, !up_cell with
     | None, None -> ()
     | _, None -> ()
-    | Some s_id, Some up_id -> (
-        let sc = getElementById s_id in
-        let uc = getElementById up_id in
+    | Some sel_c, Some up_c -> (
+        let sc = getElementById sel_c.id in
+        let uc = getElementById up_c.id in
         sc##style##border <- Js.string "1px solid black";
-        selected_cell := Some up_id;
+        selected_cell := !up_cell;
         uc##style##border <- Js.string "3px solid black";
         register_key_events @@ Js.to_string uc##id
       )
@@ -233,11 +291,11 @@ let main_service =
     match !selected_cell, !down_cell with
     | None, None -> ()
     | _, None -> ()
-    | Some s_id, Some down_id -> (
-        let sc = getElementById s_id in
-        let dc = getElementById down_id in
+    | Some sel_c, Some down_c -> (
+        let sc = getElementById sel_c.id in
+        let dc = getElementById down_c.id in
         sc##style##border <- Js.string "1px solid black";
-        selected_cell := Some down_id;
+        selected_cell := !down_cell;
         dc##style##border <- Js.string "3px solid black";
         register_key_events @@ Js.to_string dc##id
       )
@@ -248,11 +306,11 @@ let main_service =
     match !selected_cell, !left_cell with
     | None, None -> ()
     | _, None -> ()
-    | Some s_id, Some left_id -> (
-        let sc = getElementById s_id in
-        let lc = getElementById left_id in
+    | Some sel_c, Some left_c -> (
+        let sc = getElementById sel_c.id in
+        let lc = getElementById left_c.id in
         sc##style##border <- Js.string "1px solid black";
-        selected_cell := Some left_id;
+        selected_cell := !left_cell;
         lc##style##border <- Js.string "3px solid black";
         register_key_events @@ Js.to_string lc##id
       )
@@ -263,11 +321,11 @@ let main_service =
     match !selected_cell, !right_cell with
     | None, None -> ()
     | _, None -> ()
-    | Some s_id, Some right_id -> (
-        let sc = getElementById s_id in
-        let rc = getElementById right_id in
+    | Some sel_c, Some right_c -> (
+        let sc = getElementById sel_c.id in
+        let rc = getElementById right_c.id in
         sc##style##border <- Js.string "1px solid black";
-        selected_cell := Some right_id;
+        selected_cell := !right_cell;
         rc##style##border <- Js.string "3px solid black";
         register_key_events @@ Js.to_string rc##id
       )
@@ -299,14 +357,14 @@ let main_service =
       then (
         match !selected_cell with
         | None -> (
-            selected_cell := Some (Js.to_string td##id);
+            selected_cell := cell_of_id (Js.to_string td##id);
             td##style##border <- Js.string "3px solid black";
             register_key_events @@ Js.to_string td##id
           )
-        | Some id -> (
-            let c = getElementById id in
+        | Some sel_c -> (
+            let c = getElementById sel_c.id in
             c##style##border <- Js.string "1px solid black";
-            selected_cell := Some (Js.to_string td##id);
+            selected_cell := cell_of_id (Js.to_string td##id);
             td##style##border <- Js.string "3px solid black";
             register_key_events @@ Js.to_string td##id
           )

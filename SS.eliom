@@ -36,10 +36,10 @@ let () =
   SS_app.register
     ~service:test_service
     (fun () () ->
+      let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ()}} in
       let _ = {unit{UnitTests.run_tests ()}} in
       Lwt.return
         (Eliom_tools.F.html
            ~title:"Unit Tests"
            Html5.F.(body [
-               h1 [pcdata "Unit Test Results:"];
            ])))

@@ -1,11 +1,19 @@
 (* Unit Tests *)
 
-{client{
+{shared{
   open Cells
+}}
+
+{client{
   open Dom
   open Dom_html
 
   (*** Setup the Environment for Testing ***)
+
+  let msg_of_bool b =
+    match b with
+    | true  -> "pass"
+    | false -> "fail"
 
   let set_selected_cell () =
     selected_cell := Some {
@@ -17,74 +25,297 @@
 
   let set_shift_area () =
     shift_area := Some [
-      {row = 2; col = 2; id = "2_2"; txt = "jk"};
-      {row = 2; col = 3; id = "2_3"; txt = "holla"};
-      {row = 3; col = 2; id = "3_2"; txt = "wassup"};
-      {row = 3; col = 3; id = "3_3"; txt = "hey hey hey"}
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
       ];
     match !shift_area with
     | None -> ()
     | Some sa ->
       List.iter (fun (c : cell) ->
-      let body = document##body in
-      let td = createTd document in
-      td##id <- Js.string c.id;
-      td##textContent <- Js.some (Js.string c.txt);
-      (* TODO: Build a full table first, the append the cells to the fresh table *)
-      appendChild document##body td
-    ) sa
+        let td = getElementById c.id in
+        td##textContent <- (Js.some @@ Js.string c.txt)
+        ) sa
+
+  (* Clear all refs for tests *)
+  let clear_all () =
+    selected_cell  := None;
+    shift_pressed  := false;
+    shift_area     := None
 
   (*** Define Tests ***)
 
   type test_result = {
     name : string;
-    pass : bool
+    pass : bool;
+    msg  : string;
   }
 
-  let row_of_id_test = {
+  let row_of_id_test () = {
     name = "row_of_id_test";
-    pass = (row_of_id "2_21") = 2
+    pass = (row_of_id "2_21") = 2;
+    msg  = ""
   }
 
-  let col_of_id_test = {
+  let col_of_id_test () = {
     name = "col_of_id_test";
-    pass = (col_of_id "2_17") = 17
+    pass = (col_of_id "2_17") = 17;
+    msg  = ""
   }
 
-  let key_of_id_test = {
+  let key_of_id_test () = {
     name = "key_of_id_test";
-    pass = (key_of_id "21_43") = (21, 43)
+    pass = (key_of_id "21_43") = (21, 43);
+    msg  = ""
   }
 
-  (*let cell_of_id_test =
+  let cell_of_id_test () =
     set_shift_area ();
     {
       name = "cell_of_id_test";
-      pass = (cell_of_id "2_3") = Some {row = 2; col = 3; id = "2_3"; txt = "holla"}
-    }*)
+      pass = (cell_of_id "2_3") = Some {row = 2; col = 3; id = "2_3"; txt = ""};
+      msg  = "No Msg"
+    }
+
+  let shift_area_top_row_test () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_area := Some [
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+    ];
+    let top_row =
+      [
+        {row = 2; col = 2; id = "2_2"; txt = ""};
+        {row = 2; col = 3; id = "2_3"; txt = ""}
+      ]
+    in
+      {
+        name = "shift_area_top_row_test";
+        pass = (shift_area_top_row ()) = top_row;
+        msg  = "N/A"
+      }
+
+  let shift_area_bottom_row_test () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_area := Some [
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+    ];
+    let bottom_row =
+      [
+        {row = 3; col = 2; id = "3_2"; txt = ""};
+        {row = 3; col = 3; id = "3_3"; txt = ""}
+      ]
+    in
+      {
+        name = "shift_area_bottom_row_test";
+        pass = (shift_area_bottom_row ()) = bottom_row;
+        msg  = "N/A"
+      }
+
+  let shift_area_left_col_test () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_area := Some [
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+    ];
+    let left_col =
+      [
+        {row = 2; col = 2; id = "2_2"; txt = ""};
+        {row = 3; col = 2; id = "3_2"; txt = ""}
+      ]
+    in
+      {
+        name = "shift_area_left_col_test";
+        pass = (shift_area_left_col ()) = left_col;
+        msg  = "N/A"
+      }
+
+  let shift_area_right_col_test () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_area := Some [
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+    ];
+    let right_col =
+      [
+        {row = 2; col = 3; id = "2_3"; txt = ""};
+        {row = 3; col = 3; id = "3_3"; txt = ""}
+      ]
+    in
+      {
+        name = "shift_area_right_col_test";
+        pass = (shift_area_right_col ()) = right_col;
+        msg  = "N/A"
+      }
+
+  let row_above_shift_area_test = ()
+  let row_below_shift_area_test = ()
+  let col_left_shift_area_test = ()
+  let col_right_shift_area_test = ()
+
+  let update_shift_area_test () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_area := Some [
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+      ];
+    let new_shift_area =
+      Some [
+      {row = 1; col = 2; id = "1_2"; txt = ""};
+      {row = 1; col = 3; id = "1_3"; txt = ""};
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+      ];
+    in
+    update_shift_area `Up;
+    {
+      name = "update_shift_area_test";
+      pass = !shift_area = new_shift_area;
+      msg  = "N/A"
+    }
+
+  let shift_pressed_action_test () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_pressed_action ();
+    let b1 = (!shift_pressed = true) in
+    let b2 = (!shift_area = Some [{row = 3; col = 2; id = "3_2"; txt = ""}]) in
+    let msg =
+      "b1 - " ^ (msg_of_bool b1) ^
+      ", b2 - " ^ (msg_of_bool b2)
+    in
+    {
+      name = "shift_pressed_action_test";
+      pass = b1 && b2;
+      msg  = msg
+    }
+
+  (* Test up arrow with just a single selected_cell and w/o shift pressed *)
+  let up_arrow_action_test_1 () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_pressed := false;
+    up_arrow_action ();
+    let b1 = (!selected_cell = Some {row = 2; col = 2; id = "2_2"; txt = ""}) in
+    let b2 = (!shift_area    = None) in
+    let msg = "b1 - " ^ (msg_of_bool b1) ^ ", b2 - " ^ (msg_of_bool b2) in
+    {
+      name = "up_arrow_action_test_1";
+      pass = b1 && b2;
+      msg = msg
+    }
+
+  (* Test up arrow with just a single selected_cell and with shift pressed *)
+  let up_arrow_action_test_2 () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_pressed := true;
+    up_arrow_action ();
+    let b1 = (!selected_cell = Some {row = 2; col = 2; id = "2_2"; txt = ""}) in
+    let b2 = (!shift_area = Some [
+        {row = 2; col = 2; id = "2_2"; txt = ""};
+        {row = 3; col = 2; id = "3_2"; txt = ""}
+      ])
+    in
+    let msg =
+      "b1 - " ^ (msg_of_bool b1) ^
+      ", b2 - " ^ (msg_of_bool b2)
+    in
+    {
+      name = "up_arrow_action_test_2";
+      pass = b1 && b2;
+      msg = msg
+    }
+
+(* Test up arrow TWICE with just a single selected_cell and with shift pressed *)
+  let up_arrow_action_test_3 () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_pressed := true;
+    up_arrow_action ();
+    up_arrow_action ();
+    let b1 = (!selected_cell = Some {row = 2; col = 2; id = "2_2"; txt = ""}) in
+    let b2 = (!shift_area = Some [
+        {row = 1; col = 2; id = "1_2"; txt = ""};
+        {row = 2; col = 2; id = "2_2"; txt = ""};
+        {row = 3; col = 2; id = "3_2"; txt = ""};
+      ])
+    in
+    let msg =
+      "b1 - " ^ (msg_of_bool b1) ^
+      ", b2 - " ^ (msg_of_bool b2)
+    in
+    {
+      name = "up_arrow_action_test_3";
+      pass = b1 && b2;
+      msg = msg
+    }
+
+  (* Group and Run Tests *)
 
   let tests = [
     row_of_id_test;
     col_of_id_test;
-    key_of_id_test
-    (*cell_of_id_test*)
+    key_of_id_test;
+    cell_of_id_test;
+    shift_area_top_row_test;
+    shift_area_bottom_row_test;
+    shift_area_left_col_test;
+    shift_area_right_col_test;
+    update_shift_area_test;
+    shift_pressed_action_test;
+    up_arrow_action_test_1;
+    up_arrow_action_test_2;
+    up_arrow_action_test_3
   ]
 
   (* Append the test results to the page *)
-  let append_result (tr : test_result) =
+  let append_result ?(print_msg = true) (tr : test_result) =
     let body = document##body in
     let test_msg = createP document in
     let () =
       match tr.pass with
-      | true -> test_msg##textContent  <- Js.some (Js.string (tr.name ^ " passed"))
-      | false -> test_msg##textContent <- Js.some (Js.string ("*** " ^ tr.name ^ " FAILED ***"))
+      | true -> (
+          test_msg##textContent <- Js.some (Js.string (tr.name ^ " passed"));
+          test_msg##style##backgroundColor <- Js.string "lightgreen"
+        )
+      | false -> (
+          test_msg##textContent <- Js.some (Js.string
+            ("*** " ^ tr.name ^ " FAILED ***" ^ (if print_msg then "msg = " ^ tr.msg else "")));
+          test_msg##style##backgroundColor <- Js.string "lightpink"
+        )
     in
     appendChild body test_msg
 
   let run_tests () =
-    let all_tests_pass = List.map (fun tr -> tr.pass) tests |> fun l -> not (List.mem false l) in
-    match all_tests_pass with
-    | true  -> append_result {name = "ALL TESTS"; pass = true}
-    | false -> List.iter (append_result) tests
+    let body = document##body in
+    let h = createH1 document in
+    h##textContent <- Js.some (Js.string "Unit Test Results:");
+    appendChild body h;
+    let results = List.map (fun f -> f ()) tests in
+    let all_tests_pass = List.map (fun tr -> tr.pass) results |> fun l -> not (List.mem false l) in
+    if all_tests_pass
+    then append_result ~print_msg:false {name = "ALL TESTS"; pass = true; msg = ""}
+    else append_result ~print_msg:false {name = "SOME TESTS FAILED"; pass = false; msg = ""};
+    List.iter (append_result) results
 
 }}

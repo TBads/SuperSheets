@@ -6,9 +6,9 @@
 PROJECT_NAME := SS
 
 # Source files for the server
-SERVER_FILES := $(wildcard *.eliomi *.eliom)
+SERVER_FILES := Cells.eliom UnitTests.eliom SS.eliom
 # Source files for the client
-CLIENT_FILES := $(wildcard *.eliomi *.eliom)
+CLIENT_FILES := Cells.eliom UnitTests.eliom SS.eliom
 
 # OCamlfind packages for the server
 SERVER_PACKAGES :=

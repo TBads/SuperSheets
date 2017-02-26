@@ -63,19 +63,24 @@
   let max_row = ref 0
   let max_col = ref 0
 
-  type shift_select = Highlight of cell list | Unhighlight of cell list
-
   (* Current area selected with shift *)
   let (shift_area : cell list option ref) = ref None
 
-
   let string_of_cell c =
-    "{\n" ^
+    "\n{\n" ^
     "  row = " ^ (string_of_int c.row) ^ ";\n" ^
     "  col = " ^ (string_of_int c.col) ^ ";\n" ^
     "  id  = " ^ c.id ^ ";\n" ^
     "  txt = " ^ c.txt ^ "\n" ^
     "}"
+
+  let print_shift_area () =
+    ignore @@ %shell_print "\nshift_area = ";
+    match !shift_area with
+    | None -> ignore @@ %shell_print "None";
+    | Some sa ->
+      let s = List.map (string_of_cell) sa |> List.fold_left (fun s acc -> s ^ acc) "" in
+      ignore @@ %shell_print s
 
   let row_of_id (id : string) =
     String.sub id 0 (String.index id '_') |> int_of_string
@@ -96,6 +101,24 @@
           txt = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "")
     }
     with _ -> None (* TODO: Log/Handle specific errors here *)
+
+  (* Get the number of rows in the current shift area *)
+  let shift_area_nrows () =
+    match !shift_area with
+    | None -> 0
+    | Some sa ->
+      List.map (fun c -> c.row) sa
+      |> List.fold_left (fun acc n -> if List.mem n acc then acc else n :: acc) []
+      |> List.length
+
+  (* Get the number of columns in the current shift area *)
+  let shift_area_ncols () =
+    match !shift_area with
+    | None -> 0
+    | Some sa ->
+      List.map (fun c -> c.col) sa
+      |> List.fold_left (fun acc n -> if List.mem n acc then acc else n :: acc) []
+      |> List.length
 
  (* Keys take the form of row_col, ex. row 1 column 3 has the key "1_3" *)
   let h : ((int * int), string) Hashtbl.t = Hashtbl.create 100
@@ -262,7 +285,7 @@
       let top_row_ids = List.map (fun c -> c.id) tr in
       let top_row_keys = List.map (key_of_id) top_row_ids in
       let row_above_ids =
-        List.map (fun (r, c) -> (string_of_int (r-1)) ^ "_" ^ (string_of_int c)) top_row_keys
+        List.map (fun (r, c) -> (string_of_int (r - 1)) ^ "_" ^ (string_of_int c)) top_row_keys
       in
       let row_above = List.map (cell_of_id) row_above_ids in
       drop_nones row_above
@@ -276,7 +299,7 @@
       let bottom_row_ids = List.map (fun c -> c.id) br in
       let bottom_row_keys = List.map (key_of_id) bottom_row_ids in
       let row_below_ids =
-        List.map (fun (r, c) -> (string_of_int (r+1)) ^ "_" ^ (string_of_int c)) bottom_row_keys
+        List.map (fun (r, c) -> (string_of_int (r + 1)) ^ "_" ^ (string_of_int c)) bottom_row_keys
       in
       let row_below = List.map (cell_of_id) row_below_ids in
       drop_nones row_below
@@ -304,49 +327,126 @@
       |> List.map (cell_of_id) |> drop_nones
     | None -> []
 
-  let update_shift_area dir =
-    match !shift_area, dir with
-    | None, _ -> ()
-    | Some sa, `Up -> (
+  let update_shift_area direction =
+    match !selected_cell, !shift_area, direction with
+    | Some sc, Some sa, `Up -> (
         match shift_area_top_row () with
         | [] -> ()
         | hd :: tl ->
-            if hd.row < 1
+            if (hd.row = sc.row && shift_area_nrows () = 1) || hd.row < sc.row
             then shift_area := Some (row_above_shift_area () @ sa)
-            else ()
+            else (
+              let r = shift_area_bottom_row () |> List.hd |> fun c -> c.row in
+              shift_area := Some (List.filter (fun c -> c.row != r) sa)
+            )
       )
-    | Some sa, `Down -> (
+    | Some sc, Some sa, `Down -> (
         match shift_area_bottom_row () with
         | [] -> ()
         | hd :: tl ->
-          if hd.row > !max_row
+          if (hd.row = sc.row && shift_area_nrows () = 1) || sc.row < hd.row
           then shift_area := Some (row_below_shift_area () @ sa)
-          else ()
+          else (
+            let r = shift_area_top_row () |> List.hd |> fun c -> c.row in
+            shift_area := Some (List.filter (fun c -> c.row != r) sa)
+          )
       )
-    | Some sa, `Left -> () (* TODO *)
-    | Some sa, `Right -> () (* TODO *)
+    | Some sc, Some sa, `Left -> (
+        match shift_area_left_col () with
+        | [] -> ()
+        | hd :: tl ->
+          if (hd.col = sc.col && shift_area_ncols () = 1) || hd.col < sc.col
+          then shift_area := Some (col_left_shift_area () @ sa)
+          else (
+            let col_num = shift_area_right_col () |> List.hd |> fun c -> c.col in
+            shift_area := Some (List.filter (fun c -> c.col != col_num) sa)
+          )
+      )
+    | Some sc, Some sa, `Right -> (
+        match shift_area_right_col () with
+        | [] -> ()
+        | hd :: tl ->
+          if (hd.col = sc.col && shift_area_ncols () = 1) || sc.col < hd.col
+          then shift_area := Some (col_right_shift_area () @ sa)
+          else (
+            let col_num = shift_area_left_col () |> List.hd |> fun c -> c.col in
+            shift_area := Some (List.filter (fun c -> c.col != col_num) sa)
+          )
+      )
+    | _, _, _ -> () (* This should not happen, log an error here *)
 
   let highlight_cells direction =
     match !selected_cell, direction with
     (* If top row num > selected_cell.row then Highlight else Unhighlight *)
     | Some sc, `Up -> (
-      match shift_area_top_row () with
-      | [] -> ()
-      | hd :: tl -> (
-        if hd.row > sc.row
-        then
-          List.iter (fun c ->
-            let td = getElementById c.id in
-            td##style##backgroundColor <- Js.string "yellow"
-            ) (row_above_shift_area ())
-        else
-          List.iter (fun c ->
-              let td = getElementById c.id in
-              td##style##backgroundColor <- Js.string cell_background_color
-          ) (shift_area_bottom_row ())
+        match shift_area_top_row () with
+        | [] -> ()
+        | hd :: tl -> (
+            if (hd.row = sc.row && shift_area_nrows () = 1) || hd.row < sc.row
+            then
+              List.iter (fun c ->
+                let td = getElementById c.id in
+                td##style##backgroundColor <- Js.string "yellow"
+                ) (row_above_shift_area ())
+            else
+              List.iter (fun c ->
+                let td = getElementById c.id in
+                td##style##backgroundColor <- Js.string cell_background_color
+              ) (shift_area_bottom_row ())
+          )
         )
+    | Some sc, `Down -> (
+        match shift_area_bottom_row () with
+        | [] -> ()
+        | hd :: tl -> (
+          if (hd.row = sc.row && shift_area_nrows () = 1) || sc.row < hd.row
+          then
+            List.iter (fun c ->
+              let td = getElementById c.id in
+              td##style##backgroundColor <- Js.string "yellow"
+              ) (row_below_shift_area ())
+          else
+            List.iter (fun c ->
+                let td = getElementById c.id in
+                td##style##backgroundColor <- Js.string cell_background_color
+            ) (shift_area_top_row ())
+          )
+        )
+    | Some sc, `Left -> (
+        match shift_area_left_col () with
+        | [] -> ()
+        | hd :: tl -> (
+            if (hd.col = sc.col && shift_area_ncols () = 1) || hd.col < sc.col
+            then
+              List.iter (fun c ->
+                  let td = getElementById c.id in
+                  td##style##backgroundColor <- Js.string "yellow"
+              ) (col_left_shift_area ())
+            else
+              List.iter (fun c ->
+                  let td = getElementById c.id in
+                  td##style##backgroundColor <- Js.string cell_background_color
+                ) (shift_area_right_col ())
+          )
       )
-    | _, _ -> ignore @@ %shell_print "TODO"
+    | Some sc, `Right -> (
+        match shift_area_right_col () with
+        | [] -> ()
+        | hd :: tl -> (
+            if (hd.col = sc.col && shift_area_ncols () = 1) || sc.col < hd.col
+            then
+              List.iter (fun c ->
+                  let td = getElementById c.id in
+                  td##style##backgroundColor <- Js.string "yellow"
+              ) (col_right_shift_area ())
+            else
+              List.iter (fun c ->
+                  let td = getElementById c.id in
+                  td##style##backgroundColor <- Js.string cell_background_color
+              ) (shift_area_left_col ())
+          )
+      )
+    | None, _ -> ()
 
   let shift_and_arrow_handler () =
     handler (fun key_down ->

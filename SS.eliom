@@ -17,6 +17,42 @@ let main_service =
 let test_service =
   Eliom_service.App.service ~path:["unittests"] ~get_params:Eliom_parameter.unit ()
 
+let test_button =
+  div ~a:[a_class ["btn btn-default btn-lg"]; a_id "header_button"]
+  [a test_service [pcdata "Unit Tests"] ()
+  ]
+
+(* TODO: Add a dropdown of things the user can do with the selected region *)
+(*let dropdown =
+  ul ~a:[a_class ["nav nav-pills"]]
+    [li ~a:[a_role ["presentation"]; a_class ["dropdown"]]
+       [a
+          ~a:[a_role["button"];
+              a_class ["dropdown-toggle"];
+              a_data_toggle ["dropdown"];
+              a_href ["#"];
+              a_aria_haspopup ["true"];
+                a_aria_expanded ["false"]]
+          [pcdata "Dropdown"]
+       ]
+    ]
+*)
+
+let header_navbar_skeleton =
+  nav ~a:[a_class ["navbar navbar-fixed-top"]; a_style "background-color: #333;"]
+  [div ~a:[a_class ["container-fluid"]]
+   [div ~a:[a_class ["navbar-header"]]
+    [test_button(*; dropdown*)
+    ]
+   ]
+  ]
+
+(* Bootstrap CDN link *)
+let bootstrap_cdn_link =
+  let cdn_link = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" in
+    link ~rel:[`Stylesheet] ~href:(Xml.uri_of_string cdn_link)
+      ()
+
 let () =
   SS_app.register
     ~service:main_service
@@ -28,8 +64,14 @@ let () =
         (Eliom_tools.F.html
            ~title:"SS"
            ~css:[["css";"SS.css"]]
-           Html5.F.(body [
-           ])))
+           ~other_head:[bootstrap_cdn_link]
+           Html5.F.(
+             body ~a:[a_id "sheet"]
+             [header_navbar_skeleton
+             ]
+           )
+        )
+    )
 
 (* Unit test service *)
 let () =

@@ -162,10 +162,105 @@
         msg  = "N/A"
       }
 
-  let row_above_shift_area_test = ()
-  let row_below_shift_area_test = ()
-  let col_left_shift_area_test = ()
-  let col_right_shift_area_test = ()
+  let row_above_shift_area_test () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_area := Some [
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+    ];
+    let row_above =
+      [
+        {row = 1; col = 3; id = "1_3"; txt = ""};
+        {row = 1; col = 2; id = "1_2"; txt = ""}
+      ]
+    in
+    let msg =
+      List.map (string_of_cell) (row_above_shift_area ())
+      |> List.fold_left (fun s acc -> s ^ acc) ""
+    in
+    {
+      name = "row_above_shift_area_test";
+      pass = (row_above_shift_area ()) = row_above;
+      msg  = msg
+    }
+
+  let row_below_shift_area_test () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_area := Some [
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+    ];
+    let row_below =
+      [
+        {row = 4; col = 3; id = "4_3"; txt = ""};
+        {row = 4; col = 2; id = "4_2"; txt = ""}
+      ]
+    in
+    let msg =
+      List.map (string_of_cell) (row_below_shift_area ())
+      |> List.fold_left (fun s acc -> s ^ acc) ""
+    in
+    {
+      name = "row_below_shift_area_test";
+      pass = (row_below_shift_area ()) = row_below;
+      msg  = msg
+    }
+
+  let col_left_shift_area_test ( )=
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_area := Some [
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+    ];
+    let col_left =
+      [
+        {row = 3; col = 1; id = "3_1"; txt = ""};
+        {row = 2; col = 1; id = "2_1"; txt = ""}
+      ]
+    in
+    let msg =
+      List.map (string_of_cell) (col_left_shift_area ())
+      |> List.fold_left (fun s acc -> s ^ acc) ""
+    in
+    {
+      name = "col_left_shift_area_test";
+      pass = (col_left_shift_area ()) = col_left;
+      msg  = msg
+    }
+
+  let col_right_shift_area_test () =
+    clear_all ();
+    selected_cell := Some {row = 3; col = 2; id = "3_2"; txt = ""};
+    shift_area := Some [
+      {row = 2; col = 2; id = "2_2"; txt = ""};
+      {row = 2; col = 3; id = "2_3"; txt = ""};
+      {row = 3; col = 2; id = "3_2"; txt = ""};
+      {row = 3; col = 3; id = "3_3"; txt = ""}
+    ];
+    let col_right =
+      [
+        {row = 3; col = 4; id = "3_4"; txt = ""};
+        {row = 2; col = 4; id = "2_4"; txt = ""}
+      ]
+    in
+    let msg =
+      List.map (string_of_cell) (col_right_shift_area ())
+      |> List.fold_left (fun s acc -> s ^ acc) ""
+    in
+    {
+      name = "col_right_shift_area_test";
+      pass = (col_right_shift_area ()) = col_right;
+      msg  = msg
+    }
 
   let update_shift_area_test () =
     clear_all ();
@@ -178,19 +273,51 @@
       ];
     let new_shift_area =
       Some [
-      {row = 1; col = 2; id = "1_2"; txt = ""};
-      {row = 1; col = 3; id = "1_3"; txt = ""};
+        {row = 1; col = 3; id = "1_3"; txt = ""};
+        {row = 1; col = 2; id = "1_2"; txt = ""};
+        {row = 2; col = 2; id = "2_2"; txt = ""};
+        {row = 2; col = 3; id = "2_3"; txt = ""};
+        {row = 3; col = 2; id = "3_2"; txt = ""};
+        {row = 3; col = 3; id = "3_3"; txt = ""}
+      ];
+    in
+    update_shift_area `Up;
+    let msg =
+      match !shift_area with
+      | None -> "None"
+      | Some sa -> List.map (string_of_cell) sa |> List.fold_left (fun s acc -> s ^ acc) ""
+    in
+    {
+      name = "update_shift_area_test";
+      pass = !shift_area = new_shift_area;
+      msg  = "shift_area = " ^ msg
+    }
+
+  let update_shift_area_test_2 () =
+    clear_all ();
+    selected_cell := Some {row = 2; col = 2; id = "2_2"; txt = ""};
+    shift_area := Some [
       {row = 2; col = 2; id = "2_2"; txt = ""};
       {row = 2; col = 3; id = "2_3"; txt = ""};
       {row = 3; col = 2; id = "3_2"; txt = ""};
       {row = 3; col = 3; id = "3_3"; txt = ""}
       ];
+    let new_shift_area =
+      Some [
+        {row = 2; col = 2; id = "2_2"; txt = ""};
+        {row = 2; col = 3; id = "2_3"; txt = ""};
+      ];
     in
     update_shift_area `Up;
+    let msg =
+      match !shift_area with
+      | None -> "None"
+      | Some sa -> List.map (string_of_cell) sa |> List.fold_left (fun s acc -> s ^ acc) ""
+    in
     {
-      name = "update_shift_area_test";
+      name = "update_shift_area_test_2";
       pass = !shift_area = new_shift_area;
-      msg  = "N/A"
+      msg  = "shift_area = " ^ msg
     }
 
   let shift_pressed_action_test () =
@@ -281,7 +408,12 @@
     shift_area_bottom_row_test;
     shift_area_left_col_test;
     shift_area_right_col_test;
+    row_above_shift_area_test;
+    row_below_shift_area_test;
+    col_left_shift_area_test;
+    col_right_shift_area_test;
     update_shift_area_test;
+    update_shift_area_test_2;
     shift_pressed_action_test;
     up_arrow_action_test_1;
     up_arrow_action_test_2;

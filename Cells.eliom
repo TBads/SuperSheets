@@ -219,17 +219,14 @@
           td##style##backgroundColor <- Js.string cell_background_color
         ) cl
 
-  let shift_release_action td =
-    ignore @@ %shell_print "\nshift_release_action called";
-    match !selected_cell with
+  let shift_release_action () =
+    match !shift_area with
     | None -> ()
-    | Some c ->
-      let sc = getElementById c.id in
-      sc##style##backgroundColor <- Js.string cell_background_color;
-      sc##style##border <- Js.string "3px solid black";
-      unhighlight_shift_area ();
-      shift_area       := None;
-      shift_pressed    := false
+    | Some sa ->
+      shift_pressed := false;
+      if List.length sa = 1
+      then unhighlight_shift_area ()
+      else ()
 
   (* Get the list of cells that makeup the top row of the the currently selected area *)
   let shift_area_top_row () =
@@ -477,11 +474,12 @@
         | Some c -> Some [c]
       )
 
-  (* TODO: If the user double clicks on a cell with data in it, retain the existing string *)
   let dbl_click_handler td =
     handler (fun _ ->
+      let existing_text = td##textContent in
       td##textContent <- Js.null;
       let txt = createTextarea document in
+      txt##textContent <- existing_text;
       appendChild td txt;
       td##onkeyup <- escape_cell_handler td txt;
       Js._false
@@ -537,6 +535,7 @@
   let up_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
+        unhighlight_shift_area ();
         match up_cell () with
         | None -> ()
         | Some up_c ->
@@ -555,6 +554,7 @@
   let down_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
+        unhighlight_shift_area ();
         match down_cell () with
         | None -> ()
         | Some down_c ->
@@ -573,6 +573,7 @@
   let left_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
+        unhighlight_shift_area ();
         match left_cell () with
         | None -> ()
         | Some left_c ->
@@ -591,6 +592,7 @@
   let right_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
+        unhighlight_shift_area ();
         match right_cell () with
         | None -> ()
         | Some right_c ->

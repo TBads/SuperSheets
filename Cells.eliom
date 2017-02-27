@@ -93,6 +93,9 @@
   let key_of_id (id : string) =
     (row_of_id id, col_of_id id)
 
+  let id_of_key row col =
+    (string_of_int row) ^ "_" ^ (string_of_int col)
+
   (* Given an element id, get the cell *)
   let cell_of_id (id : string) =
     try
@@ -622,7 +625,7 @@
     handler (fun key_release ->
         match key_release##keyCode with
         | 16 -> shift_release_action (); Js._true
-        | _ as kr -> (); Js._true
+        | _ -> (); Js._true
       )
 
   (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
@@ -685,6 +688,7 @@
     | None ->
       (* Initialize the row and append the row number and an empty td *)
       let init_row = createTr document in
+      init_row##id <- Js.string ("row_" ^ (string_of_int row_num));
       let rn_td = new_row_number_cell row_num in
       appendChild init_row rn_td;
       let new_td = new_cell ((string_of_int row_num) ^ "_1") in
@@ -747,5 +751,49 @@
       body##onkeyup <- key_release_handler;
       appendChild tbl tbdy;
       appendChild body tbl
+
+  let merge_shift_area () =
+    let top_row_num =
+      match shift_area_top_row () with
+      | [] -> None
+      | hd :: tl -> Some hd.row
+    in
+    let left_col_num =
+      match shift_area_left_col () with
+      | [] -> None
+      | hd :: tl -> Some hd.col
+    in
+    let width = shift_area_nrows () in
+    let height = shift_area_ncols () in
+    match top_row_num, left_col_num, !shift_area with
+    | Some trn, Some lcn, Some sa ->
+      List.iter (fun c ->
+          if c.row != trn || c.col != lcn
+          then (
+            let tr = getElementById ("row_" ^ (string_of_int c.row)) in
+            let td = getElementById c.id in
+            ignore @@ %shell_print ("\nRemoving child " ^ c.id);
+            removeChild tr td
+          )
+          else (
+            ignore @@ %shell_print ("\nReplacing child " ^ c.id);
+            let tr = getElementById ("row_" ^ (string_of_int c.row)) in
+            let old_td = getElementById c.id in
+            let new_td = createTd document in
+            new_td##rowSpan <- width;
+            new_td##colSpan <- height;
+            ignore @@ %shell_print "\nMADE IT TO HERE";
+            replaceChild tr new_td old_td;
+            ignore @@ %shell_print "\nMADE IT PAST HERE"
+          )
+        ) sa
+    | _, _, _ -> ()
+
+  let merge_area_button () =
+    let btn = createButton document in
+    btn##textContent <- Js.some @@ Js.string "Place Over Area";
+    btn##onmouseup <- handler (fun _ -> merge_shift_area (); Js._true);
+    let body = document##body in
+    appendChild body btn
 
 }}

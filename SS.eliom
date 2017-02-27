@@ -22,6 +22,8 @@ let test_button =
   [a test_service [pcdata "Unit Tests"] ()
   ]
 
+(* TODO Add a button to instert a button into the selected area *)
+
 (* TODO: Add a dropdown of things the user can do with the selected region *)
 (*let dropdown =
   ul ~a:[a_class ["nav nav-pills"]]
@@ -60,6 +62,7 @@ let () =
      let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ()}} in
      let _ = {unit{save_button ()}} in
      let _ = {unit{load_button ()}} in
+     let _ = {unit{merge_area_button ()}} in
       Lwt.return
         (Eliom_tools.F.html
            ~title:"SS"

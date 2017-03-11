@@ -5,6 +5,7 @@
   (* Print a string to the server side shell -- for testing *)
   let shell_print = server_function Json.t<string> Lwt_io.print
 
+  (* TODO: need to be able to store & retreive merged cells. To do this, I need to replace h with at hashtbl of type ((int * int), cell) Hashtbl.t, then store cells directly in this hashtbl *)
   let store_to_disc s =
     let open Lwt_unix in
     lwt fd =
@@ -266,6 +267,20 @@
 
   let get_cell key = Hashtbl.find h key
 
+  let json_of_cell (c : cell) =
+     match c with
+     | SingleCell sc ->
+         ("\"SingleCell\" : {\"" ^ sc.id ^ "\":\"" ^ sc.txt ^ "\"}")
+     | MergedCell mc ->
+         "\"MergedCell\" : {
+          \"top_row\"    : " ^ (string_of_int mc.top_row) ^ ",
+          \"bottom_row\" : " ^ (string_of_int mc.bottom_row) ^ ",
+          \"left_col\"   : " ^ (string_of_int mc.left_col) ^ ",
+          \"right_col\"  : " ^ (string_of_int mc.right_col) ^ ",
+          \"id\"         : \"" ^ mc.id ^ "\",
+          \"txt\"        : \"" ^ mc.txt ^ "\"
+        }"
+
   let json_string_of_ss () =
     let json_content =
       Hashtbl.fold (fun k v acc ->
@@ -334,17 +349,20 @@
     let body = document##body in
     appendChild body btn
 
-  let escape_cell_handler (td : tableCellElement Js.t) (txt : textAreaElement Js.t) =
-    handler (fun (e : keyboardEvent Js.t) ->
-      if e##keyCode = 27 (* Escape Key Code *)
-      then (
-        store_cell (key_of_id @@ Js.to_string td##id) (Js.to_string txt##value);
-        removeChild td txt;
-        td##textContent <- Js.some txt##value
+  let escape_cell_handler
+    (td  : tableCellElement Js.t)
+    (txt : inputElement Js.t)
+    (div : divElement Js.t) =
+      handler (fun (e : keyboardEvent Js.t) ->
+        if e##keyCode = 27 (* Escape Key Code *)
+        then (
+          store_cell (key_of_id @@ Js.to_string td##id) (Js.to_string txt##value);
+          removeChild document##body div;
+          td##textContent <- Js.some txt##value
+        )
+        else ();
+        Js._true
       )
-      else ();
-      Js._true
-    )
 
   let highlight_cells cl =
     List.iter (fun c ->
@@ -857,14 +875,35 @@
         | Some c -> Some [c]
       )
 
-  let dbl_click_handler td =
+  let formula_bar ~td ~existing_text () =
+    let div = createDiv document in
+    div##className <- Js.string "input-group";
+    let span = createSpan document in
+    span##className <- Js.string "input-group-addon";
+    span##id <- Js.string "basic-addon1";
+    span##innerHTML <- td##id;
+    let txt = createInput ~_type:(Js.string "text") document in
+    txt##className <- Js.string "form-control";
+    txt##style##width <- Js.string "100%";
+    txt##placeholder <- Js.string "Type Here...";
+    let () =
+      match Js.to_string @@ Js.Opt.get existing_text (fun () -> Js.string "") with
+      | "" -> ()
+      | _ as t -> txt##defaultValue <- Js.string t
+    in
+    appendChild div span;
+    appendChild div txt;
+    appendChild document##body div;
+    txt##focus ();
+    txt##onkeyup <- escape_cell_handler td txt div
+
+  let dbl_click_handler (td : tableCellElement Js.t) =
     handler (fun _ ->
       let existing_text = td##textContent in
+      ignore @@ %shell_print
+        (Js.to_string @@ Js.Opt.get existing_text (fun () -> Js.string "No Existing Text"));
       td##textContent <- Js.null;
-      let txt = createTextarea document in
-      txt##textContent <- existing_text;
-      appendChild td txt;
-      td##onkeyup <- escape_cell_handler td txt;
+      formula_bar ~td ~existing_text ();
       Js._false
     )
 
@@ -1024,7 +1063,6 @@
     | Some sa, Some c -> selected_area := Some (c :: sa)
 
   (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
-  (* TODO The user should be able to hold shift and click on cells to add them to selected area *)
   let click_handler (td : tableCellElement Js.t) =
     handler (fun (clk : mouseEvent Js.t) ->
       if clk##button = 0
@@ -1170,7 +1208,7 @@
       |> Array.to_list
       |> Array.concat
     in
-    Array.map (fun (r, c) -> store_merged_cell (r, c) cell_location) ids
+    Array.iter (fun (r, c) -> store_merged_cell (r, c) cell_location) ids
 
 (* TODO: Ther user should be able to select a single merged cell and click the merge button to un-merge the cell *)
 
@@ -1259,6 +1297,7 @@
               new_td##colSpan <- height;
               new_td##style##backgroundColor <- Js.string cell_background_color;
               new_td##onmousedown <- click_handler new_td;
+              new_td##ondblclick <- dbl_click_handler new_td;
               new_td##id <- old_td##id;
               replaceChild tr new_td old_td;
               selected_cell := None;

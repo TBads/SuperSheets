@@ -51,7 +51,7 @@ let header_navbar_skeleton =
 
 (* Bootstrap CDN link *)
 let bootstrap_cdn_link =
-  let cdn_link = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" in
+  let cdn_link = "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" in
     link ~rel:[`Stylesheet] ~href:(Xml.uri_of_string cdn_link)
       ()
 

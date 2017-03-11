@@ -38,6 +38,10 @@
 
 {client{
 
+  (* NOTE: The order of operations is always: *)
+  (*   (1) Update the selected area           *)
+  (*   (2) Perform highlighting               *)
+
   open Dom
   open Dom_html
 
@@ -75,7 +79,7 @@
   let max_col = ref 0
 
   (* Current area selected with shift *)
-  let (shift_area : cell list option ref) = ref None
+  let (selected_area : cell list option ref) = ref None
 
   (* Merged cells - keys take the form (row,col), values are the location of the merged cell *)
   (* i.e. the top left corner                                                                *)
@@ -108,9 +112,9 @@
     | None -> "None"
     | Some sa -> List.map (string_of_cell) sa |> List.fold_left (^) ""
 
-  let print_shift_area () =
-    ignore @@ %shell_print "\nshift_area = ";
-    match !shift_area with
+  let print_selected_area () =
+    ignore @@ %shell_print "\nselected_area = ";
+    match !selected_area with
     | None -> ignore @@ %shell_print "None"
     | Some sa ->
       let s = List.map (string_of_cell) sa |> List.fold_left (fun s acc -> s ^ acc) "" in
@@ -162,17 +166,12 @@
 
   (* Given an element id, get the cell *)
   let cell_of_id (id : string) =
-    ignore @@ %shell_print ("\ncell_of_id " ^ id);
     (* Change the id if the cell is a merged cell *)
     let real_id =
       match Hashtbl.mem merged_h (key_of_id id) with
-      | true -> (
-          ignore @@ %shell_print "\nMergedCell";
-          Hashtbl.find merged_h (key_of_id id)
-        )
+      | true  -> Hashtbl.find merged_h (key_of_id id)
       | false -> id
     in
-    ignore @@ %shell_print ("\nreal_id " ^ real_id);
     try
       let c = getElementById real_id in
       let rs =
@@ -223,8 +222,8 @@
      ) cl []
 
   (* Get the number of rows in the current shift area *)
-  let shift_area_nrows () =
-    match !shift_area with
+  let selected_area_nrows () =
+    match !selected_area with
     | None -> 0
     | Some sa ->
       let single_cell_row_nums = List.map (fun c -> c.row) (single_cells sa) in
@@ -238,8 +237,8 @@
       |> List.length
 
   (* Get the number of columns in the current shift area *)
-  let shift_area_ncols () =
-    match !shift_area with
+  let selected_area_ncols () =
+    match !selected_area with
     | None -> 0
     | Some sa ->
       let single_cell_col_nums = List.map (fun c -> c.col) (single_cells sa) in
@@ -347,35 +346,45 @@
       Js._true
     )
 
-  let unhighlight_shift_area () =
-    match !shift_area with
-    | None -> ()
-    | Some cl ->
-      List.iter (fun (c : cell) ->
-          match c with
-          | SingleCell sc -> (
-            let td = getElementById sc.id in
-            td##style##backgroundColor <- Js.string cell_background_color
-            )
-          | MergedCell mc -> (
-              let td = getElementById mc.id in
-              td##style##backgroundColor <- Js.string cell_background_color
-            )
-        ) cl
+  let highlight_cells cl =
+    List.iter (fun c ->
+        try
+          let td = getElementById (id_of_cell c) in
+          td##style##backgroundColor <- Js.string "yellow"
+        with _ -> () (* TODO: Log error here *)
+      ) cl
+
+  let unhighlight_cells cl =
+    List.iter (fun c ->
+        try
+          let td = getElementById (id_of_cell c) in
+          td##style##backgroundColor <- Js.string cell_background_color
+        with _ -> () (* TODO: Log error here *)
+      ) cl
+
+  let highlight_selected_area () =
+    match !selected_area with
+    | None    -> ()
+    | Some sa -> highlight_cells sa
+
+  let unhighlight_selected_area () =
+    match !selected_area with
+    | None    -> ()
+    | Some sa -> unhighlight_cells sa
 
   let shift_release_action () =
-    match !shift_area with
+    match !selected_area with
     | None -> ()
     | Some sa -> (
         shift_pressed := false;
         if List.length sa = 1
-        then unhighlight_shift_area ()
+        then unhighlight_selected_area ()
         else ()
       )
 
   (* Get the list of cells that makeup the top row of the the currently selected area *)
-  let shift_area_top_row () =
-    match !shift_area with
+  let selected_area_top_row () =
+    match !selected_area with
     | None -> []
     | Some sa ->
       let single_cell_row_nums = List.map (fun c -> c.row) (single_cells sa) in
@@ -398,8 +407,8 @@
       ) sa
 
   (* Get the list of cells that makeup the bottom row of the the currently selected area *)
-  let shift_area_bottom_row () =
-    match !shift_area with
+  let selected_area_bottom_row () =
+    match !selected_area with
     | None -> []
     | Some sa ->
       let single_cell_row_nums = List.map (fun c -> c.row) (single_cells sa) in
@@ -422,8 +431,8 @@
       ) sa
 
   (* Get the list of cells that makeup the left col of the the currently selected area *)
-  let shift_area_left_col () =
-    match !shift_area with
+  let selected_area_left_col () =
+    match !selected_area with
     | None -> []
     | Some sa ->
       let single_cell_col_nums = List.map (fun c -> c.col) (single_cells sa) in
@@ -446,8 +455,8 @@
       ) sa
 
   (* Get the list of cells that makeup the right col of the the currently selected area *)
-  let shift_area_right_col () =
-    match !shift_area with
+  let selected_area_right_col () =
+    match !selected_area with
     | None -> []
     | Some sa ->
       let single_cell_col_nums = List.map (fun c -> c.col) (single_cells sa) in
@@ -476,10 +485,10 @@
     | None :: tl -> drop_nones ~acc tl
 
   (* Get the list of cells that makeup the row just above the currently selected area *)
-  let (row_above_shift_area : unit -> cell list) () =
-    match !shift_area  with
+  let (row_above_selected_area : unit -> cell list) () =
+    match !selected_area  with
     | Some sa ->
-      let tr = shift_area_top_row () in
+      let tr = selected_area_top_row () in
       let single_cell_top_row_ids = List.map (fun (c : single_cell) -> c.id) (single_cells tr) in
       let merged_cell_top_row_ids =
         List.map (single_ids_of_merged_cell) (merged_cells tr)
@@ -496,10 +505,10 @@
     | None -> []
 
   (* Get the list of cells that makeup the row just below the currently selected area *)
-  let row_below_shift_area () =
-    match !shift_area with
+  let row_below_selected_area () =
+    match !selected_area with
     | Some sa ->
-      let br = shift_area_bottom_row () in
+      let br = selected_area_bottom_row () in
       let single_cell_bottom_row_ids = List.map (fun (c : single_cell) -> c.id) (single_cells br) in
       let merged_cell_bottom_row_ids =
         List.map (single_ids_of_merged_cell) (merged_cells br)
@@ -516,10 +525,10 @@
     | None -> []
 
   (* Get the list of cells that makeup the col just to the left of the currently selected area *)
-  let col_left_shift_area () =
-    match !shift_area with
+  let col_left_selected_area () =
+    match !selected_area with
     | Some sa ->
-      let lc = shift_area_left_col () in
+      let lc = selected_area_left_col () in
       let single_cell_left_col_ids = List.map (fun (c : single_cell) -> c.id) (single_cells lc) in
       let merged_cell_left_col_ids =
         List.map (single_ids_of_merged_cell) (merged_cells lc)
@@ -533,10 +542,10 @@
     | None -> []
 
   (* Get the list of cells that makeup the col just to the right of the currently selected area *)
-  let col_right_shift_area () =
-    match !shift_area with
+  let col_right_selected_area () =
+    match !selected_area with
     | Some sa ->
-      let rc = shift_area_right_col () in
+      let rc = selected_area_right_col () in
       let single_cell_right_col_ids = List.map (fun (c : single_cell) -> c.id) (single_cells rc) in
       let merged_cell_right_col_ids =
         List.map (single_ids_of_merged_cell) (merged_cells rc)
@@ -573,146 +582,267 @@
     | SingleCell sc -> sc.col
     | MergedCell mc -> mc.right_col
 
-  let update_shift_area direction =
-    match !selected_cell, !shift_area, direction with
-    | Some sc, Some sa, `Up -> (
-        match shift_area_top_row () with
-        | [] -> ()
-        | hd :: tl ->
-            if (t_row hd = t_row sc && shift_area_nrows () = 1) || t_row hd < t_row sc
-            then shift_area := Some (row_above_shift_area () @ sa)
-            else (
-              match shift_area_bottom_row () with
-              | [] -> ()
-              | h :: t -> shift_area := Some (List.filter (fun c -> b_row c != b_row h) sa) (* ?? *)
+  (* Add missing cells to selected_area after it has been updated                 *)
+  (* Ex. If a merged cell covers 2,2 2,3 3,2 & 3,3, then the user selects 4,2,    *)
+  (*     presses shift + up, the merged cell and previously selected cell make up *)
+  (*     selected_area, but 4,3 will need to be added also                        *)
+  let select_missing_cells () =
+    (* get the top row, bottom row, left col and right col of selected_area *)
+    match !selected_area with
+    | None -> ()
+    | Some sa -> (
+        let tr = List.fold_left (fun acc c -> if t_row c < acc then t_row c else acc) max_int sa in
+        let br = List.fold_left (fun acc c -> if b_row c > acc then b_row c else acc) 0 sa in
+        let lc = List.fold_left (fun acc c -> if l_col c < acc then l_col c else acc) max_int sa in
+        let rc = List.fold_left (fun acc c -> if r_col c > acc then r_col c else acc) 0 sa in
+        (* Get a list of all possible single cell ids that are in this area *)
+        (* Note: if there is a merged cell in the selected area, then some ids may not exist *)
+        let row_nums = Array.create (br - tr + 1) 0 |> (Array.mapi (fun i _ -> i + tr)) in
+        let col_nums = Array.create (rc - lc + 1) 0 |> (Array.mapi (fun i _ -> i + lc)) in
+        let cell_ids =
+          Array.map (fun r -> Array.fold_left (fun acc c -> (r, c) :: acc) [] col_nums) row_nums
+          |> Array.to_list
+          |> List.flatten
+          (* Drop cell ids that are in a larger merged area and are not the id of the merged cell *)
+          |> List.filter (fun (r, c) ->
+              if Hashtbl.mem merged_h (r, c) && (id_of_key r c) != Hashtbl.find merged_h (r, c)
+              then false
+              else true
             )
+          |> List.map (fun (r, c) -> id_of_key r c)
+        in
+        (* Add cells to selected_area that are in cell_ids and not in selected_area *)
+        let sa_ids = List.map (fun c -> id_of_cell c) sa in
+        let non_merged_ids = List.find_all (fun id -> not @@ List.mem id sa_ids) cell_ids in
+        let missing_cells = List.map (cell_of_id) non_merged_ids |> drop_nones in
+        selected_area := Some (missing_cells @ sa)
       )
-    | Some sc, Some sa, `Down -> (
-        match shift_area_bottom_row () with
-        | [] -> ()
-        | hd :: tl ->
-            if (b_row hd = b_row sc && shift_area_nrows () = 1) || b_row sc < b_row hd
-            then shift_area := Some (row_below_shift_area () @ sa)
-            else (
-              match shift_area_top_row () with
-              | [] -> ()
-              | h :: t -> shift_area := Some (List.filter (fun c -> t_row c != t_row h) sa) (* ?? *)
-            )
-      )
-    | Some sc, Some sa, `Left -> (
-        match shift_area_left_col () with
-        | [] -> ()
-        | hd :: tl ->
-            if (l_col hd = l_col sc && shift_area_ncols () = 1) || l_col hd < l_col sc
-            then shift_area := Some (col_left_shift_area () @ sa)
-            else (
-              match shift_area_right_col () with
-              | [] -> ()
-              | h :: t -> shift_area := Some (List.filter (fun c -> r_col c != r_col h) sa) (* ?? *)
-            )
-      )
-    | Some sc, Some sa, `Right -> (
-        match shift_area_right_col () with
-        | [] -> ()
-        | hd :: tl ->
-            if (r_col hd = r_col sc && shift_area_ncols () = 1) || r_col sc < r_col hd
-            then shift_area := Some (col_right_shift_area () @ sa)
-            else (
-              match shift_area_left_col () with
-              | [] -> ()
-              | h :: t -> shift_area := Some (List.filter (fun c -> l_col c != l_col h) sa) (* ?? *)
-            )
-      )
-    | _, _, _ -> () (* This should not happen, log an error here *)
 
-  let highlight_cells direction =
-    match !selected_cell, direction with
-    (* If top row num > selected_cell.row then Highlight else Unhighlight *)
-    | Some sc, `Up -> (
-        match shift_area_top_row () with
+  let update_selected_area_up () =
+    match !selected_cell, !selected_area with
+    | Some sc, Some sa -> (
+        match selected_area_top_row () with
+        | [] -> ()
+        | hd :: tl ->
+          if (t_row hd = t_row sc && selected_area_nrows () = 1) || t_row hd < t_row sc
+          then selected_area := Some (row_above_selected_area () @ sa)
+          else (
+            match selected_area_bottom_row () with
+            | [] -> ()
+            | h :: t -> (
+              selected_area := Some (List.filter (fun c -> b_row c != b_row h) sa);
+              unhighlight_cells (h :: t)
+              )
+          );
+          select_missing_cells ()
+      )
+    | _, _ -> ()
+
+  let update_selected_area_down () =
+    match !selected_cell, !selected_area with
+    | Some sc, Some sa -> (
+        match selected_area_bottom_row () with
+        | [] -> ()
+        | hd :: tl ->
+          if (b_row hd = b_row sc && selected_area_nrows () = 1) || b_row sc < b_row hd
+          then selected_area := Some (row_below_selected_area () @ sa)
+          else (
+            match selected_area_top_row () with
+            | [] -> ()
+            | h :: t as cl -> (
+                selected_area := Some (List.filter (fun c -> t_row c != t_row h) sa);
+                unhighlight_cells cl
+            )
+          );
+          select_missing_cells ()
+      )
+    | _, _ -> ()
+
+  let update_selected_area_left () =
+    match !selected_cell, !selected_area with
+    | Some sc, Some sa -> (
+        match selected_area_left_col () with
+        | [] -> ()
+        | hd :: tl ->
+          if (l_col hd = l_col sc && selected_area_ncols () = 1) || l_col hd < l_col sc
+          then selected_area := Some (col_left_selected_area () @ sa)
+          else (
+            match selected_area_right_col () with
+            | [] -> ()
+            | h :: t as cl -> (
+                selected_area := Some (List.filter (fun c -> r_col c != r_col h) sa);
+                unhighlight_cells cl
+            )
+          );
+          select_missing_cells ()
+      )
+    | _,_ -> ()
+
+  let update_selected_area_right () =
+    match !selected_cell, !selected_area with
+    | Some sc, Some sa -> (
+        match selected_area_right_col () with
+        | [] -> ()
+        | hd :: tl ->
+          if (r_col hd = r_col sc && selected_area_ncols () = 1) || r_col sc < r_col hd
+          then selected_area := Some (col_right_selected_area () @ sa)
+          else (
+            match selected_area_left_col () with
+            | [] -> ()
+            | h :: t as cl -> (
+                selected_area := Some (List.filter (fun c -> l_col c != l_col h) sa);
+                unhighlight_cells cl
+              )
+          );
+          select_missing_cells ()
+      )
+    | _, _ -> () (* This should not happen, log an error here *)
+
+  (* Fill in the missing area after cells have been highlighted              *)
+  (* Ex. If a merged cell covers 2,2 2,3 3,2 & 3,3, then the user selects 4,2,                 *)
+  (*     presses shift + up, the merged cell and previously selected cell will be highlighted, *)
+  (*  but 4,3 will need to be highlighted also                                                 *)
+  let highlight_missing_area () =
+    (* get the top row, bottom row, left col and right col of the highlighted area *)
+    match !selected_area with
+    | Some sa -> (
+        let top_row_num =
+          List.fold_left (fun acc c -> if t_row c < acc then t_row c else acc) max_int sa
+        in
+        let bottom_row_num =
+          List.fold_left (fun acc c -> if b_row c > acc then b_row c else acc) 0 sa
+        in
+        let left_col_num =
+          List.fold_left (fun acc c -> if l_col c < acc then l_col c else acc) max_int sa
+        in
+        let right_col_num =
+          List.fold_left (fun acc c -> if r_col c > acc then r_col c else acc) 0 sa
+        in
+        (* Get a list of all single cells that cover this area *)
+        (* Note: if there is a merged cell in the selected area, then some of these may not exist *)
+        let row_nums =
+        Array.create (bottom_row_num - top_row_num + 1) 0
+        |> (Array.mapi (fun i _ -> i + top_row_num))
+        in
+        let col_nums =
+          Array.create (right_col_num - left_col_num + 1) 0
+          |> (Array.mapi (fun i _ -> i + left_col_num))
+        in
+        let cell_ids =
+          Array.map (fun r -> Array.fold_left (fun acc c -> (r, c) :: acc) [] col_nums) row_nums
+          |> Array.to_list
+          |> List.flatten
+          |> List.map (fun (r, c) -> id_of_key r c)
+        in
+        List.iter (fun id ->
+          try
+            let td = getElementById id in
+            td##style##backgroundColor <- Js.string "yellow"
+          with _ -> () (* TODO: Log error here *)
+        ) cell_ids
+      )
+    | None -> ()
+
+  let highlight_cells_up () =
+    match !selected_cell with
+    | Some sc -> (
+        match selected_area_top_row () with
         | [] -> ()
         | hd :: tl -> (
-            if (t_row hd = t_row sc && shift_area_nrows () = 1) || t_row hd < t_row sc
-            then
+            if (t_row hd = t_row sc && selected_area_nrows () = 1) || t_row hd < t_row sc
+            then begin
               List.iter (fun c ->
                 let td = getElementById (id_of_cell c) in
                 td##style##backgroundColor <- Js.string "yellow"
-                ) (row_above_shift_area ())
+                ) (row_above_selected_area ());
+              highlight_missing_area () end
             else
               List.iter (fun c ->
                 let td = getElementById (id_of_cell c) in
                 td##style##backgroundColor <- Js.string cell_background_color
-              ) (shift_area_bottom_row ())
+                ) (selected_area_bottom_row ())
           )
-        )
-    | Some sc, `Down -> (
-        match shift_area_bottom_row () with
+      )
+    | None -> ()
+
+  let highlight_cells_down () =
+    match !selected_cell with
+    | Some sc -> (
+        match selected_area_bottom_row () with
         | [] -> ()
         | hd :: tl -> (
-          if (b_row hd = b_row sc && shift_area_nrows () = 1) || b_row sc < b_row hd
+          if (b_row hd = b_row sc && selected_area_nrows () = 1) || b_row sc < b_row hd
           then
             List.iter (fun c ->
               let td = getElementById (id_of_cell c) in
               td##style##backgroundColor <- Js.string "yellow"
-              ) (row_below_shift_area ())
+              ) (row_below_selected_area ())
           else
             List.iter (fun c ->
                 let td = getElementById (id_of_cell c) in
                 td##style##backgroundColor <- Js.string cell_background_color
-            ) (shift_area_top_row ())
+            ) (selected_area_top_row ())
           )
-        )
-    | Some sc, `Left -> (
-        match shift_area_left_col () with
+      )
+    | None -> ()
+
+  let highlight_cells_left () =
+    match !selected_cell with
+    | Some sc -> (
+        match selected_area_left_col () with
         | [] -> ()
         | hd :: tl -> (
-            if (l_col hd = l_col sc && shift_area_ncols () = 1) || l_col hd < l_col sc
+            if (l_col hd = l_col sc && selected_area_ncols () = 1) || l_col hd < l_col sc
             then
               List.iter (fun c ->
                   let td = getElementById (id_of_cell c) in
                   td##style##backgroundColor <- Js.string "yellow"
-              ) (col_left_shift_area ())
+              ) (col_left_selected_area ())
             else
               List.iter (fun c ->
                   let td = getElementById (id_of_cell c) in
                   td##style##backgroundColor <- Js.string cell_background_color
-                ) (shift_area_right_col ())
+                ) (selected_area_right_col ())
           )
       )
-    | Some sc, `Right -> (
-        match shift_area_right_col () with
+    | None -> ()
+
+  let highlight_cells_right () =
+    match !selected_cell with
+    | Some sc -> (
+        match selected_area_right_col () with
         | [] -> ()
         | hd :: tl -> (
-            if (r_col hd = r_col sc && shift_area_ncols () = 1) || r_col sc < r_col hd
+            if (r_col hd = r_col sc && selected_area_ncols () = 1) || r_col sc < r_col hd
             then
               List.iter (fun c ->
                   let td = getElementById (id_of_cell c) in
                   td##style##backgroundColor <- Js.string "yellow"
-              ) (col_right_shift_area ())
+              ) (col_right_selected_area ())
             else
               List.iter (fun c ->
                   let td = getElementById (id_of_cell c) in
                   td##style##backgroundColor <- Js.string cell_background_color
-              ) (shift_area_left_col ())
+              ) (selected_area_left_col ())
           )
       )
-    | None, _ -> ()
+    | None -> ()
 
   let shift_and_arrow_handler () =
     handler (fun key_down ->
         match key_down##keyCode with
-        | 38 -> highlight_cells `Up; Js._true
-        | 40 -> highlight_cells `Down; Js._true
-        | 37 -> highlight_cells `Left; Js._true
-        | 39 -> highlight_cells `Right; Js._true
+        | 38 -> highlight_cells_up (); Js._true
+        | 40 -> highlight_cells_down (); Js._true
+        | 37 -> highlight_cells_left (); Js._true
+        | 39 -> highlight_cells_right (); Js._true
         | _ -> Js._true
       )
 
   (* When the user presses shift                                   *)
   (*  (1) register shift_pressed as true                           *)
   (*  (2) highlight the currently selected cell                    *)
-  (*  (3) update shift_area to be the selected cell                *)
-  (*  (4) Update last_shift_area to be the currently selected cell *)
+  (*  (3) update selected_area to be the selected cell                *)
+  (*  (4) Update last_selected_area to be the currently selected cell *)
   (*  (5) update shift_up, shift_down, shift_left and shift_right  *)
   let shift_pressed_action () =
     match !selected_cell with
@@ -721,7 +851,7 @@
       shift_pressed := true;
       let sc = getElementById (id_of_cell c) in
       sc##style##backgroundColor <- Js.string "yellow";
-      shift_area := (
+      selected_area := (
         match !selected_cell with
         | None -> None
         | Some c -> Some [c]
@@ -743,7 +873,7 @@
     match !selected_cell with
     | None -> None
     | Some sc ->
-      print_selected_cell ();
+      (*print_selected_cell ();*)
       let row_num = t_row sc in
       let col_num = l_col sc in
       if 1 <= row_num - 1
@@ -784,14 +914,13 @@
         else None
 
   (* Actions for an up arrow (other arrow actions follow the same pattern):             *)
-  (* If shift is not pressed: ove the selection to the cell above & update selected_cell *)
-  (* If shift_pressed: Highlight the cells above shift_area & update shift_area         *)
+  (* If shift is not pressed: ove the selected_area to the cell above & update selected_cell *)
+  (* If shift_pressed: Highlight the cells above selected_area & update selected_area         *)
   let up_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
-        shift_area := None;
-        print_shift_area ();
-        unhighlight_shift_area ();
+        unhighlight_selected_area ();
+        selected_area := None;
         match up_cell () with
         | None -> ()
         | Some up_c ->
@@ -801,19 +930,18 @@
             selected_cell := (Some up_c);
             uc##style##border <- Js.string "3px solid black";
       )
-    | Some sel_c, true ->
-      ignore @@ %shell_print "\nup_arrow_action - Point 1";
-      highlight_cells `Up;
-      ignore @@ %shell_print "\nup_arrow_action - Point 2";
-      update_shift_area `Up;
-      ignore @@ %shell_print "\nup_arrow_action - Point 3"
+    | Some sel_c, true -> (
+        update_selected_area_up ();
+        highlight_selected_area ()
+      )
     | None, _ -> () (* Note: This case should never happen *)
 
   (* Actions for a down arrow *)
   let down_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
-        unhighlight_shift_area ();
+        unhighlight_selected_area ();
+        selected_area := None;
         match down_cell () with
         | None -> ()
         | Some down_c ->
@@ -823,16 +951,18 @@
           selected_cell := (Some down_c);
           dc##style##border <- Js.string "3px solid black"
       )
-    | Some sel_c, true ->
-      highlight_cells `Down;
-      update_shift_area `Down
+    | Some sel_c, true -> (
+        update_selected_area_down ();
+        highlight_selected_area ()
+      )
     | None, _ -> () (* Note: This case should never happen *)
 
   (* Actions for a left arrow *)
   let left_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
-        unhighlight_shift_area ();
+        unhighlight_selected_area ();
+        selected_area := None;
         match left_cell () with
         | None -> ()
         | Some left_c ->
@@ -842,16 +972,18 @@
           selected_cell := (Some left_c);
           lc##style##border <- Js.string "3px solid black"
       )
-    | Some sel_c, true ->
-      highlight_cells `Left;
-      update_shift_area `Left
+    | Some sel_c, true -> (
+        update_selected_area_left ();
+        highlight_selected_area ();
+      )
     | None, _ -> () (* Note: This case should never happen *)
 
   (* Actions for a right arrow *)
   let right_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
-        unhighlight_shift_area ();
+        unhighlight_selected_area ();
+        selected_area := None;
         match right_cell () with
         | None -> ()
         | Some right_c ->
@@ -861,9 +993,10 @@
           selected_cell := (Some right_c);
           rc##style##border <- Js.string "3px solid black"
       )
-    | Some sel_c, true ->
-      highlight_cells `Right;
-      update_shift_area `Right
+    | Some sel_c, true -> (
+        update_selected_area_right ();
+        highlight_selected_area ()
+      )
     | None, _ -> () (* Note: This case should never happen *)
 
   let key_handler =
@@ -886,27 +1019,19 @@
 
   (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
   let click_handler (td : tableCellElement Js.t) =
-    (*ignore @@ %shell_print "\nclick_handler called";*)
     handler (fun (clk : mouseEvent Js.t) ->
       if clk##button = 0
       then (
         match !selected_cell with
         | None -> (
-            ignore @@ %shell_print "\nbegin None";
             selected_cell := cell_of_id (Js.to_string td##id);
             td##style##border <- Js.string "3px solid black";
-            ignore @@ %shell_print "\nend None"
           )
         | Some sel_c -> (
-            ignore @@ %shell_print "\nbegin Some";
             let c = getElementById @@ id_of_cell sel_c in
-            ignore @@ %shell_print ("\nsel_c.id = " ^ (id_of_cell sel_c));
             c##style##border <- Js.string "1px solid black";
-            ignore @@ %shell_print "\nPoint 1";
             selected_cell := cell_of_id (Js.to_string td##id);
-            ignore @@ %shell_print "\nPoint 2";
-            td##style##border <- Js.string "3px solid black";
-            ignore @@ %shell_print "\nend Some"
+            td##style##border <- Js.string "3px solid black"
           )
       )
       else ();
@@ -1027,20 +1152,20 @@
     in
     Array.map (fun (r, c) -> store_merged_cell (r, c) cell_location) ids
 
-  let merge_shift_area () =
+  let merge_selected_area () =
     let top_row_num =
-      match shift_area_top_row () with
+      match selected_area_top_row () with
       | [] -> None
       | hd :: tl -> Some (t_row hd)
     in
     let left_col_num =
-      match shift_area_left_col () with
+      match selected_area_left_col () with
       | [] -> None
       | hd :: tl -> Some (l_col hd)
     in
-    let width = shift_area_nrows () in
-    let height = shift_area_ncols () in
-    match top_row_num, left_col_num, !shift_area with
+    let width = selected_area_nrows () in
+    let height = selected_area_ncols () in
+    match top_row_num, left_col_num, !selected_area with
     | Some trn, Some lcn, Some sa ->
       List.iter (fun c ->
           if t_row c != trn || l_col c != lcn
@@ -1056,7 +1181,8 @@
             new_td##rowSpan <- width;
             new_td##colSpan <- height;
             new_td##style##backgroundColor <- Js.string cell_background_color;
-            new_td##id <- old_td##id; (* TODO Should this be temporary? *)
+            new_td##onmousedown <- click_handler new_td;
+            new_td##id <- old_td##id;
             replaceChild tr new_td old_td;
             selected_cell := None;
             (* Register the merged cell in h *)
@@ -1064,7 +1190,7 @@
             register_merged_cell ~top_row_num:trn ~left_col_num:lcn ~width ~height;
             match cell_of_id ((string_of_int trn) ^ "_" ^ (string_of_int lcn)) with
             | None -> ()
-            | Some c -> shift_area := Some [c]
+            | Some c -> selected_area := Some [c]
           )
         ) sa
     | _, _, _ -> ()
@@ -1072,7 +1198,7 @@
   let merge_area_button () =
     let btn = createButton document in
     btn##textContent <- Js.some @@ Js.string "Merge Cells";
-    btn##onmouseup <- handler (fun _ -> merge_shift_area (); Js._true);
+    btn##onmouseup <- handler (fun _ -> merge_selected_area (); Js._true);
     let body = document##body in
     appendChild body btn
 

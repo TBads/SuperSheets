@@ -166,7 +166,7 @@
     |> Array.to_list
     |> List.flatten
 
-  (* Given an element id, get the cell *)
+  (* Given an element id, get the cell from the DOM *)
   let cell_of_id (id : string) =
     (* Change the id if the cell is a merged cell *)
     let real_id =
@@ -365,6 +365,59 @@
       td##textContent <- (Js.some @@ Js.string (txt_of_cell c))
     with _ -> ()
 
+  (* Get the row from a single_cell or the top row from a merged_cell *)
+  let t_row (c : cell) =
+    match c with
+    | SingleCell sc -> sc.row
+    | MergedCell mc -> mc.top_row
+
+  (* Get the row from a single_cell or the bottom row from a merged_cell *)
+  let b_row (c : cell) =
+    match c with
+    | SingleCell sc -> sc.row
+    | MergedCell mc -> mc.bottom_row
+
+  (* Get the column from a single_cell or the left column from a merged_cell *)
+  let l_col (c : cell) =
+    match c with
+    | SingleCell sc -> sc.col
+    | MergedCell mc -> mc.left_col
+
+  (* Get the col from a single_cell or the right col from a merged_cell *)
+  let r_col (c : cell) =
+    match c with
+    | SingleCell sc -> sc.col
+    | MergedCell mc -> mc.right_col
+
+(* TODO TODO TODO pick back up here TODO TODO TODO *)
+(*let render_merged_cell ~id ~top_row ~bot_row ~left_col ~right_col ~txt =
+  (* If the cell is already rendered, do nothing *)
+  match cell_of_id id with
+  | MergedCell mc -> ()
+  | SingleCell sc ->
+      (* Check if cells needed are actually single cells *)
+      let row_nums = Array.create (br - tr + 1) 0 |> (Array.mapi (fun i _ -> i + tr)) in
+      let col_nums = Array.create (rc - lc + 1) 0 |> (Array.mapi (fun i _ -> i + lc)) in
+      let cell_ids =
+        Array.map (fun r -> Array.fold_left (fun acc c -> (r, c) :: acc) [] col_nums) row_nums
+        |> Array.to_list
+        |> List.flatten
+        |> List.map (fun (r, c) -> id_of_key r c)
+      in
+      let all_single_cells =
+        List.fold_left (fun acc id ->
+          try
+            let td = getElementById id in
+            match td with
+            | SingleCell _ -> true && acc
+            | MergedCell _ -> false && acc
+          with _ -> false && acc
+          ) true cell_ids
+      in
+      if all_single_cells
+      then (* TODO: Run merge checks, & Perform the merge process *)
+      else (* TODO: Alert user with message of why the failure is occuring *)
+*)
   (* TODO: Updates are needed here - when loading a merged cell, need to render it as well. *)
   (*       Maybe create a function called render_merged_cell *)
   (* Update the DOM with spreadsheet data loaded from disc *)
@@ -553,6 +606,70 @@
           | MergedCell mc -> mc.right_col = right_col_num
       ) sa
 
+  let cell_list_top_row (cl : cell list) =
+    let single_cell_row_nums = List.map (fun c -> c.row) (single_cells cl) in
+    let merged_cell_row_nums =
+      List.map (single_ids_of_merged_cell) (merged_cells cl)
+      |> List.flatten
+      |> List.map (fun (r, c) -> r)
+    in
+    let all_row_nums = single_cell_row_nums @ merged_cell_row_nums in
+    let top_row_num =
+      List.fold_left
+        (fun r acc -> if r < acc then r else acc)
+        max_int
+        all_row_nums
+    in
+    List.filter (fun c -> t_row c = top_row_num) cl
+
+  let cell_list_bottom_row (cl : cell list) =
+    let single_cell_row_nums = List.map (fun c -> c.row) (single_cells cl) in
+    let merged_cell_row_nums =
+      List.map (single_ids_of_merged_cell) (merged_cells cl)
+      |> List.flatten
+      |> List.map (fun (r, c) -> r)
+    in
+    let all_row_nums = single_cell_row_nums @ merged_cell_row_nums in
+    let bot_row_num =
+      List.fold_left
+        (fun r acc -> if r > acc then r else acc)
+        0
+        all_row_nums
+    in
+    List.filter (fun c -> b_row c = bot_row_num) cl
+
+  let cell_list_left_col (cl : cell list) =
+    let single_cell_col_nums = List.map (fun c -> c.col) (single_cells cl) in
+    let merged_cell_col_nums =
+      List.map (single_ids_of_merged_cell) (merged_cells cl)
+      |> List.flatten
+      |> List.map (fun (r, c) -> c)
+    in
+    let all_col_nums = single_cell_col_nums @ merged_cell_col_nums in
+    let left_col_num =
+      List.fold_left
+        (fun r acc -> if r < acc then r else acc)
+        max_int
+        all_col_nums
+    in
+    List.filter (fun c -> l_col c = left_col_num) cl
+
+  let cell_list_right_col (cl : cell list) =
+    let single_cell_col_nums = List.map (fun c -> c.col) (single_cells cl) in
+    let merged_cell_col_nums =
+      List.map (single_ids_of_merged_cell) (merged_cells cl)
+      |> List.flatten
+      |> List.map (fun (r, c) -> c)
+    in
+    let all_col_nums = single_cell_col_nums @ merged_cell_col_nums in
+    let right_col_num =
+      List.fold_left
+        (fun r acc -> if r > acc then r else acc)
+        0
+        all_col_nums
+    in
+    List.filter (fun c -> r_col c = right_col_num) cl
+
   let rec drop_nones ?(acc = []) (l : 'a option list) =
     match l with
     | [] -> acc
@@ -632,30 +749,6 @@
       List.map (fun (r, c) -> (string_of_int r) ^ "_" ^ (string_of_int (c + 1))) right_col_keys
       |> List.map (cell_of_id) |> drop_nones
     | None -> []
-
-  (* Get the row from a single_cell or the top row from a merged_cell *)
-  let t_row (c : cell) =
-    match c with
-    | SingleCell sc -> sc.row
-    | MergedCell mc -> mc.top_row
-
-  (* Get the row from a single_cell or the bottom row from a merged_cell *)
-  let b_row (c : cell) =
-    match c with
-    | SingleCell sc -> sc.row
-    | MergedCell mc -> mc.bottom_row
-
-  (* Get the column from a single_cell or the left column from a merged_cell *)
-  let l_col (c : cell) =
-    match c with
-    | SingleCell sc -> sc.col
-    | MergedCell mc -> mc.left_col
-
-  (* Get the col from a single_cell or the right col from a merged_cell *)
-  let r_col (c : cell) =
-    match c with
-    | SingleCell sc -> sc.col
-    | MergedCell mc -> mc.right_col
 
   (* Add missing cells to selected_area after it has been updated                 *)
   (* Ex. If a merged cell covers 2,2 2,3 3,2 & 3,3, then the user selects 4,2,    *)
@@ -1267,59 +1360,75 @@
     in
     Array.iter (fun (r, c) -> store_merged_cell (r, c) cell_location) ids
 
-(* TODO: Ther user should be able to select a single merged cell and click the merge button to un-merge the cell *)
+(* TODO: Ther user should be able to select a single merged cell and click the merge button *)
+(* to un-merge the cell                                                                     *)
 
-  let merge_checks () =
-    match !selected_area with
-    | None -> `Pass
-    | Some sa ->
-      (* Check 1 - All cells in selected_cells are single cells *)
-      let check_1 = List.fold_left (fun acc c ->
-          match c with
-          | SingleCell _ -> true && acc
-          | MergedCell _ -> false && acc
-        ) true sa
-      in
-      (* Check 2 - The number of single cells in selected_area = nrows * ncols *)
-      let nrows = selected_area_nrows () in
-      let ncols = selected_area_ncols () in
-      let check_2 = List.length sa = nrows * ncols in
-      (* Check 3 - All rows of cells in selected_area are in top_row & bot_row, same for cols *)
-      let top_row_num =
-        match selected_area_top_row () with
-        | [] -> -1
-        | hd :: tl -> t_row hd
-      in
-      let bot_row_num =
-        match selected_area_bottom_row () with
-        | [] -> -1
-        | hd :: tl -> b_row hd
-      in
-      let left_col_num =
-        match selected_area_left_col () with
-        | [] -> -1
-        | hd :: tl -> l_col hd
-      in
-      let right_col_num =
-        match selected_area_right_col () with
-        | [] -> -1
-        | hd :: tl -> r_col hd
-      in
-      (* Since all cells are check to be single cells at check 1, just use t_row and l_col *)
-      let check_3 =
-        List.fold_left (fun acc c ->
-            if ((t_row c) >= top_row_num &&
-                (t_row c) <= bot_row_num &&
-                (l_col c) >= left_col_num &&
-                (r_col c) <= right_col_num)
-            then true
-            else false
-          ) true sa
-      in
-      match check_1, check_2, check_3 with
-      | true, true, true -> `Pass
-      | false, _, _      -> `Fail "Cannot merge already merged cells!"
-      | true, _, _       -> `Fail "Only a rectangular area can be merged"
+  let cell_list_nrows (cl : cell list) =
+    let top_row =
+      List.fold_left (fun acc c -> if t_row c < acc then t_row c else acc) max_int cl
+    in
+    let bot_row =
+      List.fold_left (fun acc c -> if t_row c > acc then t_row c else acc) 0 cl
+    in
+    bot_row - top_row + 1
+
+  let cell_list_ncols (cl : cell list) =
+    let left_col =
+      List.fold_left (fun acc c -> if l_col c < acc then l_col c else acc) max_int cl
+    in
+    let right_col =
+      List.fold_left (fun acc c -> if r_col c > acc then r_col c else acc) 0 cl
+    in
+    right_col - left_col + 1
+
+  let merge_checks (cl : cell list) =
+    (* Check 1 - All cells are single cells *)
+    let check_1 = List.fold_left (fun acc c ->
+        match c with
+        | SingleCell _ -> true && acc
+        | MergedCell _ -> false && acc
+      ) true cl
+    in
+    (* Check 2 - The number of single cells = nrows * ncols *)
+    let nrows = cell_list_nrows cl in
+    let ncols = cell_list_ncols cl in
+    let check_2 = List.length cl = nrows * ncols in
+    (* Check 3 - All rows of cells in selected_area are in top_row & bot_row, same for cols *)
+    let top_row_num =
+      match cell_list_top_row cl with
+      | [] -> -1
+      | hd :: tl -> t_row hd
+    in
+    let bot_row_num =
+      match cell_list_bottom_row cl with
+      | [] -> -1
+      | hd :: tl -> b_row hd
+    in
+    let left_col_num =
+      match cell_list_left_col cl with
+      | [] -> -1
+      | hd :: tl -> l_col hd
+    in
+    let right_col_num =
+      match cell_list_right_col cl with
+      | [] -> -1
+      | hd :: tl -> r_col hd
+    in
+    (* Since all cells are check to be single cells at check 1, just use t_row and l_col *)
+    let check_3 =
+      List.fold_left (fun acc c ->
+          if ((t_row c) >= top_row_num &&
+              (t_row c) <= bot_row_num &&
+              (l_col c) >= left_col_num &&
+              (r_col c) <= right_col_num)
+          then true
+          else false
+        ) true cl
+    in
+    match check_1, check_2, check_3 with
+    | true, true, true -> `Pass
+    | false, _, _      -> `Fail "Cannot merge already merged cells!"
+    | true, _, _       -> `Fail "Only a rectangular area can be merged"
 
   let store_fresh_merged_cell ~top_row ~left_col ~width ~height txt =
     let bot_row = top_row + height - 1 in
@@ -1333,24 +1442,24 @@
         txt        = txt
   })
 
-  let merge_selected_area () =
-    match merge_checks () with
+  let merge_area (cl : cell list) =
+    match merge_checks cl with
     | `Fail msg -> window##alert (Js.string msg)
     | `Pass ->
       let top_row_num =
-        match selected_area_top_row () with
+        match cell_list_top_row cl with
         | [] -> None
         | hd :: tl -> Some (t_row hd)
       in
       let left_col_num =
-        match selected_area_left_col () with
+        match cell_list_left_col cl with
         | [] -> None
         | hd :: tl -> Some (l_col hd)
       in
-      let width = selected_area_nrows () in
-      let height = selected_area_ncols () in
-      match top_row_num, left_col_num, !selected_area with
-      | Some trn, Some lcn, Some sa ->
+      let width = cell_list_ncols cl in
+      let height = cell_list_nrows cl in
+      match top_row_num, left_col_num with
+      | Some trn, Some lcn ->
         List.iter (fun c ->
             if t_row c != trn || l_col c != lcn
             then (
@@ -1378,8 +1487,13 @@
               | None -> ()
               | Some c -> selected_area := Some [c]
             )
-          ) sa
-      | _, _, _ -> ()
+          ) cl
+      | _, _ -> ()
+
+  let merge_selected_area () =
+    match !selected_area with
+    | None -> ()
+    | Some sa -> merge_area sa
 
   let merge_area_button () =
     let btn = createButton document in

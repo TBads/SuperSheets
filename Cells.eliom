@@ -261,6 +261,34 @@
     then Hashtbl.replace h key value
     else Hashtbl.add h key value
 
+  let store_merged_cell (key : int * int) (value : string) =
+    if Hashtbl.mem merged_h key
+    then Hashtbl.replace merged_h key value
+    else Hashtbl.add merged_h key value
+
+  let register_merged_cell ~top_row_num ~left_col_num ~width ~height =
+    let cell_location = (string_of_int top_row_num) ^ "_" ^ (string_of_int left_col_num) in
+    let ids =
+      Array.init height (fun _ -> left_col_num)
+      |> Array.mapi (fun i c -> (top_row_num + i, c))
+      |> Array.map (fun (r, c) -> Array.init width (fun i -> (r, c + i)))
+      |> Array.to_list
+      |> Array.concat
+    in
+    Array.iter (fun (r, c) -> store_merged_cell (r, c) cell_location) ids
+
+  let store_fresh_merged_cell ~top_row ~left_col ~width ~height txt =
+    let bot_row = top_row + height - 1 in
+    let right_col = left_col + width - 1 in
+    store_cell (top_row, left_col) (MergedCell {
+        top_row    = top_row;
+        bottom_row = bot_row;
+        left_col   = left_col;
+        right_col  = right_col;
+        id         = id_of_key (top_row) (left_col);
+        txt        = txt
+  })
+
   (* Update the text fields in a cell residing in h *)
   let update_cell_in_h (key : int * int) (txt : string) =
     if Hashtbl.mem h key
@@ -293,11 +321,6 @@
           txt = txt
         })
 
-  let store_merged_cell (key : int * int) (value : string) =
-    if Hashtbl.mem merged_h key
-    then Hashtbl.replace merged_h key value
-    else Hashtbl.add merged_h key value
-
   let get_cell key = Hashtbl.find h key
 
   let json_of_cell (c : cell) =
@@ -311,12 +334,12 @@
          "}")
      | MergedCell mc ->
          "\"MergedCell\" : {" ^
-          "\"top_row\"    : " ^ (string_of_int mc.top_row) ^ "," ^
+          "\"top_row\" : " ^ (string_of_int mc.top_row) ^ "," ^
           "\"bottom_row\" : " ^ (string_of_int mc.bottom_row) ^ "," ^
-          "\"left_col\"   : " ^ (string_of_int mc.left_col) ^ "," ^
-          "\"right_col\"  : " ^ (string_of_int mc.right_col) ^ "," ^
-          "\"id\"         : \"" ^ mc.id ^ "\"," ^
-          "\"txt\"        : \"" ^ mc.txt ^ "\"" ^
+          "\"left_col\" : " ^ (string_of_int mc.left_col) ^ "," ^
+          "\"right_col\" : " ^ (string_of_int mc.right_col) ^ "," ^
+          "\"id\" : \"" ^ mc.id ^ "\"," ^
+          "\"txt\" : \"" ^ mc.txt ^ "\"" ^
         "}"
 
   let cell_of_json ((s, j) : string * Yojson.Basic.json) =
@@ -358,13 +381,6 @@
     Hashtbl.clear h;
     List.iter (fun (kv : (int * int) * cell) -> store_cell (fst kv) (snd kv)) kv_list
 
-  let update_td (rc : int * int) c =
-    let id = (string_of_int @@ fst rc) ^ "_" ^ (string_of_int @@ snd rc) in
-    try
-      let td = getElementById id in
-      td##textContent <- (Js.some @@ Js.string (txt_of_cell c))
-    with _ -> ()
-
   (* Get the row from a single_cell or the top row from a merged_cell *)
   let t_row (c : cell) =
     match c with
@@ -389,37 +405,336 @@
     | SingleCell sc -> sc.col
     | MergedCell mc -> mc.right_col
 
-(* TODO TODO TODO pick back up here TODO TODO TODO *)
-(*let render_merged_cell ~id ~top_row ~bot_row ~left_col ~right_col ~txt =
-  (* If the cell is already rendered, do nothing *)
-  match cell_of_id id with
-  | MergedCell mc -> ()
-  | SingleCell sc ->
-      (* Check if cells needed are actually single cells *)
-      let row_nums = Array.create (br - tr + 1) 0 |> (Array.mapi (fun i _ -> i + tr)) in
-      let col_nums = Array.create (rc - lc + 1) 0 |> (Array.mapi (fun i _ -> i + lc)) in
-      let cell_ids =
-        Array.map (fun r -> Array.fold_left (fun acc c -> (r, c) :: acc) [] col_nums) row_nums
-        |> Array.to_list
-        |> List.flatten
-        |> List.map (fun (r, c) -> id_of_key r c)
+  let cell_list_top_row (cl : cell list) =
+    let single_cell_row_nums = List.map (fun c -> c.row) (single_cells cl) in
+    let merged_cell_row_nums =
+      List.map (single_ids_of_merged_cell) (merged_cells cl)
+      |> List.flatten
+      |> List.map (fun (r, c) -> r)
+    in
+    let all_row_nums = single_cell_row_nums @ merged_cell_row_nums in
+    let top_row_num =
+      List.fold_left
+        (fun r acc -> if r < acc then r else acc)
+        max_int
+        all_row_nums
+    in
+    List.filter (fun c -> t_row c = top_row_num) cl
+
+  let cell_list_bottom_row (cl : cell list) =
+    let single_cell_row_nums = List.map (fun c -> c.row) (single_cells cl) in
+    let merged_cell_row_nums =
+      List.map (single_ids_of_merged_cell) (merged_cells cl)
+      |> List.flatten
+      |> List.map (fun (r, c) -> r)
+    in
+    let all_row_nums = single_cell_row_nums @ merged_cell_row_nums in
+    let bot_row_num =
+      List.fold_left
+        (fun r acc -> if r > acc then r else acc)
+        0
+        all_row_nums
+    in
+    List.filter (fun c -> b_row c = bot_row_num) cl
+
+  let cell_list_left_col (cl : cell list) =
+    let single_cell_col_nums = List.map (fun c -> c.col) (single_cells cl) in
+    let merged_cell_col_nums =
+      List.map (single_ids_of_merged_cell) (merged_cells cl)
+      |> List.flatten
+      |> List.map (fun (r, c) -> c)
+    in
+    let all_col_nums = single_cell_col_nums @ merged_cell_col_nums in
+    let left_col_num =
+      List.fold_left
+        (fun r acc -> if r < acc then r else acc)
+        max_int
+        all_col_nums
+    in
+    List.filter (fun c -> l_col c = left_col_num) cl
+
+  let cell_list_right_col (cl : cell list) =
+    let single_cell_col_nums = List.map (fun c -> c.col) (single_cells cl) in
+    let merged_cell_col_nums =
+      List.map (single_ids_of_merged_cell) (merged_cells cl)
+      |> List.flatten
+      |> List.map (fun (r, c) -> c)
+    in
+    let all_col_nums = single_cell_col_nums @ merged_cell_col_nums in
+    let right_col_num =
+      List.fold_left
+        (fun r acc -> if r > acc then r else acc)
+        0
+        all_col_nums
+    in
+    List.filter (fun c -> r_col c = right_col_num) cl
+
+  let cell_list_nrows (cl : cell list) =
+    let top_row =
+      List.fold_left (fun acc c -> if t_row c < acc then t_row c else acc) max_int cl
+    in
+    let bot_row =
+      List.fold_left (fun acc c -> if t_row c > acc then t_row c else acc) 0 cl
+    in
+    bot_row - top_row + 1
+
+  let cell_list_ncols (cl : cell list) =
+    let left_col =
+      List.fold_left (fun acc c -> if l_col c < acc then l_col c else acc) max_int cl
+    in
+    let right_col =
+      List.fold_left (fun acc c -> if r_col c > acc then r_col c else acc) 0 cl
+    in
+    right_col - left_col + 1
+
+  let merge_checks (cl : cell list) =
+    (* Check 1 - All cells are single cells *)
+    let check_1 = List.fold_left (fun acc c ->
+        match c with
+        | SingleCell _ -> true && acc
+        | MergedCell _ -> false && acc
+      ) true cl
+    in
+    (* Check 2 - The number of single cells = nrows * ncols *)
+    let nrows = cell_list_nrows cl in
+    let ncols = cell_list_ncols cl in
+    let check_2 = List.length cl = nrows * ncols in
+    (* Check 3 - All rows of cells in selected_area are in top_row & bot_row, same for cols *)
+    let top_row_num =
+      match cell_list_top_row cl with
+      | [] -> -1
+      | hd :: tl -> t_row hd
+    in
+    let bot_row_num =
+      match cell_list_bottom_row cl with
+      | [] -> -1
+      | hd :: tl -> b_row hd
+    in
+    let left_col_num =
+      match cell_list_left_col cl with
+      | [] -> -1
+      | hd :: tl -> l_col hd
+    in
+    let right_col_num =
+      match cell_list_right_col cl with
+      | [] -> -1
+      | hd :: tl -> r_col hd
+    in
+    (* Since all cells are check to be single cells at check 1, just use t_row and l_col *)
+    let check_3 =
+      List.fold_left (fun acc c ->
+          if ((t_row c) >= top_row_num &&
+              (t_row c) <= bot_row_num &&
+              (l_col c) >= left_col_num &&
+              (r_col c) <= right_col_num)
+          then true
+          else false
+        ) true cl
+    in
+    match check_1, check_2, check_3 with
+    | true, true, true -> `Pass
+    | false, _, _      -> `Fail "Cannot merge already merged cells!"
+    | true, _, _       -> `Fail "Only a rectangular area can be merged"
+
+  let add_to_selected_area (co : cell option) =
+    match !selected_area, co with
+    | _, None      -> ()
+    | None, Some c -> selected_area := Some [c]
+    | Some sa, Some c -> selected_area := Some (c :: sa)
+
+  (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
+  let click_handler (td : tableCellElement Js.t) =
+    handler (fun (clk : mouseEvent Js.t) ->
+      if clk##button = 0
+      then (
+        match !selected_cell, !shift_pressed with
+        | None, true -> (
+            selected_cell := cell_of_id (Js.to_string td##id);
+            td##style##border <- Js.string "3px solid black";
+            td##style##backgroundColor <- Js.string "yellow"
+          )
+        | None, false -> (
+            selected_cell := cell_of_id (Js.to_string td##id);
+            td##style##border <- Js.string "3px solid black"
+          )
+        | Some sel_c, true -> (
+            let c = getElementById @@ id_of_cell sel_c in
+            c##style##border <- Js.string "1px solid black";
+            selected_cell := cell_of_id (Js.to_string td##id);
+            td##style##border <- Js.string "3px solid black";
+            td##style##backgroundColor <- Js.string "yellow";
+            add_to_selected_area !selected_cell
+          )
+        | Some sel_c, false -> (
+            let c = getElementById @@ id_of_cell sel_c in
+            c##style##border <- Js.string "1px solid black";
+            selected_cell := cell_of_id (Js.to_string td##id);
+            td##style##border <- Js.string "3px solid black"
+          )
+      )
+      else ();
+      Js._true
+    )
+
+  let escape_cell_handler
+    (td  : tableCellElement Js.t)
+    (txt : inputElement Js.t)
+    (div : divElement Js.t) =
+      handler (fun (e : keyboardEvent Js.t) ->
+        if e##keyCode = 27 (* Escape Key Code *)
+        then (
+          update_cell_in_h (key_of_id @@ Js.to_string td##id) (Js.to_string txt##value);
+          removeChild document##body div;
+          td##textContent <- Js.some txt##value
+        )
+        else ();
+        Js._true
+      )
+
+  let formula_bar ~td ~existing_text () =
+    let div = createDiv document in
+    div##className <- Js.string "input-group";
+    let span = createSpan document in
+    span##className <- Js.string "input-group-addon";
+    span##id <- Js.string "basic-addon1";
+    span##innerHTML <- td##id;
+    let txt = createInput ~_type:(Js.string "text") document in
+    txt##className <- Js.string "form-control";
+    txt##style##width <- Js.string "100%";
+    txt##placeholder <- Js.string "Type Here...";
+    let () =
+      match Js.to_string @@ Js.Opt.get existing_text (fun () -> Js.string "") with
+      | "" -> ()
+      | _ as t -> txt##defaultValue <- Js.string t
+    in
+    appendChild div span;
+    appendChild div txt;
+    appendChild document##body div;
+    txt##focus ();
+    txt##onkeyup <- escape_cell_handler td txt div
+
+  let dbl_click_handler (td : tableCellElement Js.t) =
+    handler (fun _ ->
+      let existing_text = td##textContent in
+      ignore @@ %shell_print
+        (Js.to_string @@ Js.Opt.get existing_text (fun () -> Js.string "No Existing Text"));
+      td##textContent <- Js.null;
+      formula_bar ~td ~existing_text ();
+      Js._false
+    )
+
+  let merge_area (cl : cell list) =
+    match merge_checks cl with
+    | `Fail msg -> window##alert (Js.string msg)
+    | `Pass ->
+      let top_row_num =
+        match cell_list_top_row cl with
+        | [] -> None
+        | hd :: tl -> Some (t_row hd)
       in
-      let all_single_cells =
-        List.fold_left (fun acc id ->
-          try
-            let td = getElementById id in
-            match td with
-            | SingleCell _ -> true && acc
-            | MergedCell _ -> false && acc
-          with _ -> false && acc
-          ) true cell_ids
+      let left_col_num =
+        match cell_list_left_col cl with
+        | [] -> None
+        | hd :: tl -> Some (l_col hd)
       in
-      if all_single_cells
-      then (* TODO: Run merge checks, & Perform the merge process *)
-      else (* TODO: Alert user with message of why the failure is occuring *)
-*)
-  (* TODO: Updates are needed here - when loading a merged cell, need to render it as well. *)
-  (*       Maybe create a function called render_merged_cell *)
+      let width = cell_list_ncols cl in
+      let height = cell_list_nrows cl in
+      match top_row_num, left_col_num with
+      | Some trn, Some lcn ->
+        List.iter (fun c ->
+            if t_row c != trn || l_col c != lcn
+            then (
+              let tr = getElementById ("row_" ^ (string_of_int (t_row c))) in
+              let td = getElementById @@ id_of_cell c in
+              removeChild tr td
+            )
+            else (
+              let tr = getElementById ("row_" ^ (string_of_int @@ t_row c)) in
+              let old_td = getElementById @@ id_of_cell c in
+              let new_td = createTd document in
+              new_td##rowSpan <- width;
+              new_td##colSpan <- height;
+              new_td##style##backgroundColor <- Js.string cell_background_color;
+              new_td##onmousedown <- click_handler new_td;
+              new_td##ondblclick <- dbl_click_handler new_td;
+              new_td##id <- old_td##id;
+              store_fresh_merged_cell ~top_row:trn ~left_col:lcn ~width ~height "";
+              replaceChild tr new_td old_td;
+              selected_cell := None;
+              (* Register the merged cell in h *)
+              (* All rows and cols the area covers will be a unique key *)
+              register_merged_cell ~top_row_num:trn ~left_col_num:lcn ~width ~height;
+              match cell_of_id ((string_of_int trn) ^ "_" ^ (string_of_int lcn)) with
+              | None -> ()
+              | Some c -> selected_area := Some [c]
+            )
+          ) cl
+      | _, _ -> ()
+
+(* TODO: Right now merged cells are not stored/properly loaded 100% of the time?...*)
+
+  let render_merged_cell (mc : merged_cell) =
+    (* If the cell is already rendered, do nothing *)
+    match cell_of_id mc.id with
+    | None -> ()
+    | Some (MergedCell mc) -> ()
+    | Some (SingleCell sc) ->
+        (* Check if cells needed are actually single cells *)
+        let row_nums =
+          Array.create (mc.bottom_row - mc.top_row + 1) 0
+          |> (Array.mapi (fun i _ -> i + mc.top_row))
+        in
+        let col_nums =
+          Array.create (mc.right_col - mc.left_col + 1) 0
+          |> (Array.mapi (fun i _ -> i + mc.left_col))
+        in
+        let cell_ids =
+          Array.map (fun r -> Array.fold_left (fun acc c -> (r, c) :: acc) [] col_nums) row_nums
+          |> Array.to_list
+          |> List.flatten
+          |> List.map (fun (r, c) -> id_of_key r c)
+        in
+        let all_cells =
+          List.map (cell_of_id) cell_ids
+          |> List.map (fun co ->
+              match co with
+              | Some c -> c
+              | None -> failwith "ERROR: render_merged_cell" (* TODO: Log Error *)
+            )
+        in
+        let all_single_cells =
+          List.fold_left (fun acc id ->
+            try
+              match cell_of_id id with
+              | Some (SingleCell _) -> true && acc
+              | _ -> false && acc
+            with _ -> false && acc
+            ) true cell_ids
+        in
+        (* If all single sells are availble, then perform the merge process *)
+        if all_single_cells
+        then (
+          match merge_checks all_cells with
+          | `Fail msg ->  window##alert (Js.string msg)
+          | `Pass -> merge_area all_cells
+        )
+        else window##alert (Js.string "Not all cells selected are single cells!")
+
+  let update_td (rc : int * int) c =
+    match c with
+    | SingleCell sc -> (
+        try
+          let td = getElementById sc.id in
+          td##textContent <- (Js.some @@ Js.string sc.txt)
+        with _ -> ()
+      )
+    | MergedCell mc ->
+      try
+        render_merged_cell mc;
+        let td = getElementById mc.id in
+        td##textContent <- (Js.some @@ Js.string (mc.txt))
+      with _ -> ()
+
   (* Update the DOM with spreadsheet data loaded from disc *)
   let load_and_update () =
     lwt ss_string = %load_from_disc' () in
@@ -458,21 +773,6 @@
     btn##onmouseup <- save_ss_handler;
     let body = document##body in
     appendChild body btn
-
-  let escape_cell_handler
-    (td  : tableCellElement Js.t)
-    (txt : inputElement Js.t)
-    (div : divElement Js.t) =
-      handler (fun (e : keyboardEvent Js.t) ->
-        if e##keyCode = 27 (* Escape Key Code *)
-        then (
-          update_cell_in_h (key_of_id @@ Js.to_string td##id) (Js.to_string txt##value);
-          removeChild document##body div;
-          td##textContent <- Js.some txt##value
-        )
-        else ();
-        Js._true
-      )
 
   let highlight_cells cl =
     List.iter (fun c ->
@@ -605,70 +905,6 @@
           | SingleCell sc -> sc.col = right_col_num
           | MergedCell mc -> mc.right_col = right_col_num
       ) sa
-
-  let cell_list_top_row (cl : cell list) =
-    let single_cell_row_nums = List.map (fun c -> c.row) (single_cells cl) in
-    let merged_cell_row_nums =
-      List.map (single_ids_of_merged_cell) (merged_cells cl)
-      |> List.flatten
-      |> List.map (fun (r, c) -> r)
-    in
-    let all_row_nums = single_cell_row_nums @ merged_cell_row_nums in
-    let top_row_num =
-      List.fold_left
-        (fun r acc -> if r < acc then r else acc)
-        max_int
-        all_row_nums
-    in
-    List.filter (fun c -> t_row c = top_row_num) cl
-
-  let cell_list_bottom_row (cl : cell list) =
-    let single_cell_row_nums = List.map (fun c -> c.row) (single_cells cl) in
-    let merged_cell_row_nums =
-      List.map (single_ids_of_merged_cell) (merged_cells cl)
-      |> List.flatten
-      |> List.map (fun (r, c) -> r)
-    in
-    let all_row_nums = single_cell_row_nums @ merged_cell_row_nums in
-    let bot_row_num =
-      List.fold_left
-        (fun r acc -> if r > acc then r else acc)
-        0
-        all_row_nums
-    in
-    List.filter (fun c -> b_row c = bot_row_num) cl
-
-  let cell_list_left_col (cl : cell list) =
-    let single_cell_col_nums = List.map (fun c -> c.col) (single_cells cl) in
-    let merged_cell_col_nums =
-      List.map (single_ids_of_merged_cell) (merged_cells cl)
-      |> List.flatten
-      |> List.map (fun (r, c) -> c)
-    in
-    let all_col_nums = single_cell_col_nums @ merged_cell_col_nums in
-    let left_col_num =
-      List.fold_left
-        (fun r acc -> if r < acc then r else acc)
-        max_int
-        all_col_nums
-    in
-    List.filter (fun c -> l_col c = left_col_num) cl
-
-  let cell_list_right_col (cl : cell list) =
-    let single_cell_col_nums = List.map (fun c -> c.col) (single_cells cl) in
-    let merged_cell_col_nums =
-      List.map (single_ids_of_merged_cell) (merged_cells cl)
-      |> List.flatten
-      |> List.map (fun (r, c) -> c)
-    in
-    let all_col_nums = single_cell_col_nums @ merged_cell_col_nums in
-    let right_col_num =
-      List.fold_left
-        (fun r acc -> if r > acc then r else acc)
-        0
-        all_col_nums
-    in
-    List.filter (fun c -> r_col c = right_col_num) cl
 
   let rec drop_nones ?(acc = []) (l : 'a option list) =
     match l with
@@ -1025,38 +1261,6 @@
         | Some c -> Some [c]
       )
 
-  let formula_bar ~td ~existing_text () =
-    let div = createDiv document in
-    div##className <- Js.string "input-group";
-    let span = createSpan document in
-    span##className <- Js.string "input-group-addon";
-    span##id <- Js.string "basic-addon1";
-    span##innerHTML <- td##id;
-    let txt = createInput ~_type:(Js.string "text") document in
-    txt##className <- Js.string "form-control";
-    txt##style##width <- Js.string "100%";
-    txt##placeholder <- Js.string "Type Here...";
-    let () =
-      match Js.to_string @@ Js.Opt.get existing_text (fun () -> Js.string "") with
-      | "" -> ()
-      | _ as t -> txt##defaultValue <- Js.string t
-    in
-    appendChild div span;
-    appendChild div txt;
-    appendChild document##body div;
-    txt##focus ();
-    txt##onkeyup <- escape_cell_handler td txt div
-
-  let dbl_click_handler (td : tableCellElement Js.t) =
-    handler (fun _ ->
-      let existing_text = td##textContent in
-      ignore @@ %shell_print
-        (Js.to_string @@ Js.Opt.get existing_text (fun () -> Js.string "No Existing Text"));
-      td##textContent <- Js.null;
-      formula_bar ~td ~existing_text ();
-      Js._false
-    )
-
   (* Get the cell that is directly above the selected_cell *)
   let up_cell () =
     match !selected_cell with
@@ -1206,46 +1410,6 @@
         | _ -> (); Js._true
       )
 
-  let add_to_selected_area (co : cell option) =
-    match !selected_area, co with
-    | _, None      -> ()
-    | None, Some c -> selected_area := Some [c]
-    | Some sa, Some c -> selected_area := Some (c :: sa)
-
-  (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
-  let click_handler (td : tableCellElement Js.t) =
-    handler (fun (clk : mouseEvent Js.t) ->
-      if clk##button = 0
-      then (
-        match !selected_cell, !shift_pressed with
-        | None, true -> (
-            selected_cell := cell_of_id (Js.to_string td##id);
-            td##style##border <- Js.string "3px solid black";
-            td##style##backgroundColor <- Js.string "yellow"
-          )
-        | None, false -> (
-            selected_cell := cell_of_id (Js.to_string td##id);
-            td##style##border <- Js.string "3px solid black"
-          )
-        | Some sel_c, true -> (
-            let c = getElementById @@ id_of_cell sel_c in
-            c##style##border <- Js.string "1px solid black";
-            selected_cell := cell_of_id (Js.to_string td##id);
-            td##style##border <- Js.string "3px solid black";
-            td##style##backgroundColor <- Js.string "yellow";
-            add_to_selected_area !selected_cell
-          )
-        | Some sel_c, false -> (
-            let c = getElementById @@ id_of_cell sel_c in
-            c##style##border <- Js.string "1px solid black";
-            selected_cell := cell_of_id (Js.to_string td##id);
-            td##style##border <- Js.string "3px solid black"
-          )
-      )
-      else ();
-      Js._true
-    )
-
   (* Create a new & empty cell *)
   let new_cell id =
     let td = createTd document in
@@ -1349,146 +1513,8 @@
       appendChild tbl tbdy;
       appendChild body tbl
 
-  let register_merged_cell ~top_row_num ~left_col_num ~width ~height =
-    let cell_location = (string_of_int top_row_num) ^ "_" ^ (string_of_int left_col_num) in
-    let ids =
-      Array.init height (fun _ -> left_col_num)
-      |> Array.mapi (fun i c -> (top_row_num + i, c))
-      |> Array.map (fun (r, c) -> Array.init width (fun i -> (r, c + i)))
-      |> Array.to_list
-      |> Array.concat
-    in
-    Array.iter (fun (r, c) -> store_merged_cell (r, c) cell_location) ids
-
 (* TODO: Ther user should be able to select a single merged cell and click the merge button *)
 (* to un-merge the cell                                                                     *)
-
-  let cell_list_nrows (cl : cell list) =
-    let top_row =
-      List.fold_left (fun acc c -> if t_row c < acc then t_row c else acc) max_int cl
-    in
-    let bot_row =
-      List.fold_left (fun acc c -> if t_row c > acc then t_row c else acc) 0 cl
-    in
-    bot_row - top_row + 1
-
-  let cell_list_ncols (cl : cell list) =
-    let left_col =
-      List.fold_left (fun acc c -> if l_col c < acc then l_col c else acc) max_int cl
-    in
-    let right_col =
-      List.fold_left (fun acc c -> if r_col c > acc then r_col c else acc) 0 cl
-    in
-    right_col - left_col + 1
-
-  let merge_checks (cl : cell list) =
-    (* Check 1 - All cells are single cells *)
-    let check_1 = List.fold_left (fun acc c ->
-        match c with
-        | SingleCell _ -> true && acc
-        | MergedCell _ -> false && acc
-      ) true cl
-    in
-    (* Check 2 - The number of single cells = nrows * ncols *)
-    let nrows = cell_list_nrows cl in
-    let ncols = cell_list_ncols cl in
-    let check_2 = List.length cl = nrows * ncols in
-    (* Check 3 - All rows of cells in selected_area are in top_row & bot_row, same for cols *)
-    let top_row_num =
-      match cell_list_top_row cl with
-      | [] -> -1
-      | hd :: tl -> t_row hd
-    in
-    let bot_row_num =
-      match cell_list_bottom_row cl with
-      | [] -> -1
-      | hd :: tl -> b_row hd
-    in
-    let left_col_num =
-      match cell_list_left_col cl with
-      | [] -> -1
-      | hd :: tl -> l_col hd
-    in
-    let right_col_num =
-      match cell_list_right_col cl with
-      | [] -> -1
-      | hd :: tl -> r_col hd
-    in
-    (* Since all cells are check to be single cells at check 1, just use t_row and l_col *)
-    let check_3 =
-      List.fold_left (fun acc c ->
-          if ((t_row c) >= top_row_num &&
-              (t_row c) <= bot_row_num &&
-              (l_col c) >= left_col_num &&
-              (r_col c) <= right_col_num)
-          then true
-          else false
-        ) true cl
-    in
-    match check_1, check_2, check_3 with
-    | true, true, true -> `Pass
-    | false, _, _      -> `Fail "Cannot merge already merged cells!"
-    | true, _, _       -> `Fail "Only a rectangular area can be merged"
-
-  let store_fresh_merged_cell ~top_row ~left_col ~width ~height txt =
-    let bot_row = top_row + height - 1 in
-    let right_col = left_col + width - 1 in
-    store_cell (top_row, left_col) (MergedCell {
-        top_row    = top_row;
-        bottom_row = bot_row;
-        left_col   = left_col;
-        right_col  = right_col;
-        id         = id_of_key (top_row) (left_col);
-        txt        = txt
-  })
-
-  let merge_area (cl : cell list) =
-    match merge_checks cl with
-    | `Fail msg -> window##alert (Js.string msg)
-    | `Pass ->
-      let top_row_num =
-        match cell_list_top_row cl with
-        | [] -> None
-        | hd :: tl -> Some (t_row hd)
-      in
-      let left_col_num =
-        match cell_list_left_col cl with
-        | [] -> None
-        | hd :: tl -> Some (l_col hd)
-      in
-      let width = cell_list_ncols cl in
-      let height = cell_list_nrows cl in
-      match top_row_num, left_col_num with
-      | Some trn, Some lcn ->
-        List.iter (fun c ->
-            if t_row c != trn || l_col c != lcn
-            then (
-              let tr = getElementById ("row_" ^ (string_of_int (t_row c))) in
-              let td = getElementById @@ id_of_cell c in
-              removeChild tr td
-            )
-            else (
-              let tr = getElementById ("row_" ^ (string_of_int @@ t_row c)) in
-              let old_td = getElementById @@ id_of_cell c in
-              let new_td = createTd document in
-              new_td##rowSpan <- width;
-              new_td##colSpan <- height;
-              new_td##style##backgroundColor <- Js.string cell_background_color;
-              new_td##onmousedown <- click_handler new_td;
-              new_td##ondblclick <- dbl_click_handler new_td;
-              new_td##id <- old_td##id;
-              store_fresh_merged_cell ~top_row:trn ~left_col:lcn ~width ~height "";
-              replaceChild tr new_td old_td;
-              selected_cell := None;
-              (* Register the merged cell in h *)
-              (* All rows and cols the area covers will be a unique key *)
-              register_merged_cell ~top_row_num:trn ~left_col_num:lcn ~width ~height;
-              match cell_of_id ((string_of_int trn) ^ "_" ^ (string_of_int lcn)) with
-              | None -> ()
-              | Some c -> selected_area := Some [c]
-            )
-          ) cl
-      | _, _ -> ()
 
   let merge_selected_area () =
     match !selected_area with

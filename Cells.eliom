@@ -1,11 +1,9 @@
-(* Functions & data to operate on cell types *)
-
 {server{
 
   (* Print a string to the server side shell -- for testing *)
   let shell_print = server_function Json.t<string> Lwt_io.print
 
-  (* TODO: need to be able to store & retreive merged cells. To do this, I need to replace h with at hashtbl of type ((int * int), cell) Hashtbl.t, then store cells directly in this hashtbl *)
+  (* TODO: need to be able to retreive merged cells and render them as merged. *)
   let store_to_disc s =
     let open Lwt_unix in
     lwt fd =
@@ -151,6 +149,9 @@
     | SingleCell sc -> sc.txt
     | MergedCell mc -> mc.txt
 
+  let key_of_cell (c : cell) =
+    key_of_id @@ id_of_cell c
+
   (* Get the ids of single cells that he merged area covers *)
   let single_ids_of_merged_cell (mc : merged_cell) =
     let row_nums =
@@ -253,12 +254,44 @@
       |> List.length
 
   (* Keys take the form of (row,col), ex. row 1 column 3 has the key "1_3" *)
-  let h : ((int * int), string) Hashtbl.t = Hashtbl.create 100
+  let h : ((int * int), cell) Hashtbl.t = Hashtbl.create 100
 
-  let store_cell (key : int * int) (value : string) =
+  let store_cell (key : int * int) (value : cell) =
     if Hashtbl.mem h key
     then Hashtbl.replace h key value
     else Hashtbl.add h key value
+
+  (* Update the text fields in a cell residing in h *)
+  let update_cell_in_h (key : int * int) (txt : string) =
+    if Hashtbl.mem h key
+    then (
+      let old_cell = Hashtbl.find h key in
+      let new_cell =
+        match old_cell with
+        | SingleCell sc -> SingleCell {
+            row = sc.row;
+            col = sc.row;
+            id  = sc.id;
+            txt = txt
+          }
+        | MergedCell mc -> MergedCell {
+            top_row    = mc.top_row;
+            bottom_row = mc.bottom_row;
+            left_col   = mc.left_col;
+            right_col  = mc.right_col;
+            id         = mc.id;
+            txt        = txt
+          }
+      in
+      Hashtbl.replace h key new_cell
+    )
+    else
+      store_cell key (SingleCell {
+          row = fst key;
+          col = snd key;
+          id  = id_of_key (fst key) (snd key);
+          txt = txt
+        })
 
   let store_merged_cell (key : int * int) (value : string) =
     if Hashtbl.mem merged_h key
@@ -269,55 +302,79 @@
 
   let json_of_cell (c : cell) =
      match c with
-     | SingleCell sc ->
-         ("\"SingleCell\" : {\"" ^ sc.id ^ "\":\"" ^ sc.txt ^ "\"}")
+     | SingleCell sc -> (
+         "\"SingleCell\" : {" ^
+           "\"row\" : " ^ (string_of_int sc.row) ^ "," ^
+           "\"col\" : " ^ (string_of_int sc.col) ^ "," ^
+           "\"id\" : \"" ^ sc.id ^ "\"," ^
+           "\"txt\" : \"" ^ sc.txt ^ "\"" ^
+         "}")
      | MergedCell mc ->
-         "\"MergedCell\" : {
-          \"top_row\"    : " ^ (string_of_int mc.top_row) ^ ",
-          \"bottom_row\" : " ^ (string_of_int mc.bottom_row) ^ ",
-          \"left_col\"   : " ^ (string_of_int mc.left_col) ^ ",
-          \"right_col\"  : " ^ (string_of_int mc.right_col) ^ ",
-          \"id\"         : \"" ^ mc.id ^ "\",
-          \"txt\"        : \"" ^ mc.txt ^ "\"
-        }"
+         "\"MergedCell\" : {" ^
+          "\"top_row\"    : " ^ (string_of_int mc.top_row) ^ "," ^
+          "\"bottom_row\" : " ^ (string_of_int mc.bottom_row) ^ "," ^
+          "\"left_col\"   : " ^ (string_of_int mc.left_col) ^ "," ^
+          "\"right_col\"  : " ^ (string_of_int mc.right_col) ^ "," ^
+          "\"id\"         : \"" ^ mc.id ^ "\"," ^
+          "\"txt\"        : \"" ^ mc.txt ^ "\"" ^
+        "}"
+
+  let cell_of_json ((s, j) : string * Yojson.Basic.json) =
+    let open Yojson.Basic.Util in
+    match s with
+    | "SingleCell" -> SingleCell {
+        row = member "row" j |> to_int;
+        col = member "col" j |> to_int;
+        id  = member "id"  j |> to_string;
+        txt = member "txt" j |> to_string
+      }
+    | "MergedCell" -> MergedCell {
+        top_row    = member "top_row" j |> to_int;
+        bottom_row = member "bottom_row" j |> to_int;
+        left_col   = member "left_col" j |> to_int;
+        right_col  = member "right_col" j |> to_int;
+        id         = member "id" j |> to_string;
+        txt        = member "txt" j |> to_string
+      }
+    | _ -> failwith "Error: Received bad json!"
 
   let json_string_of_ss () =
     let json_content =
-      Hashtbl.fold (fun k v acc ->
-          acc ^ "\"" ^ ((string_of_int @@ fst k) ^ "_" ^ (string_of_int @@ snd k)) ^
-          "\":" ^ "\"" ^ v ^ "\","
-        ) h "{"
+      Hashtbl.fold (fun k v acc -> acc ^ (json_of_cell v) ^ ",") h "{"
       |> fun json_string -> String.sub json_string 0 (String.length json_string - 1)
     in
+    ignore @@ %shell_print "\n\nss_string:";
+    ignore @@ %shell_print (json_content ^ "}");
     json_content ^ "}"
 
-  (* Parse a spreadsheet string into a (key, value) list *)
+  (* Parse a spreadsheet string into a ((int * int), cell) list *)
   let parse_ss_string (ss_string : string) =
-    let json = Yojson.Basic.from_string ss_string in
-    let keys = Yojson.Basic.Util.keys json in
-    let values = Yojson.Basic.Util.values json in
-    List.map2 (fun k v -> match v with | `String s -> [k; s] | _ -> []) keys values
-    |> List.filter (fun l -> List.length l > 0)
-    |> List.map (fun sl -> ((row_of_id @@ List.hd sl, col_of_id @@ List.hd sl), List.nth sl 1))
+    Yojson.Basic.from_string ss_string
+    |> Yojson.Basic.Util.to_assoc
+    |> List.map cell_of_json
 
   (* Clear all data out of h, and replace it with the new input [key, value] list *)
-  let replace_h (kv_list :  ((int * int) * string) list) =
+  let replace_h (kv_list :  ((int * int) * cell) list) =
     Hashtbl.clear h;
-    List.iter (fun (kv : (int * int) * string) -> store_cell (fst kv) (snd kv)) kv_list
+    List.iter (fun (kv : (int * int) * cell) -> store_cell (fst kv) (snd kv)) kv_list
 
-  let update_td (rc : int * int) txt =
+  let update_td (rc : int * int) c =
     let id = (string_of_int @@ fst rc) ^ "_" ^ (string_of_int @@ snd rc) in
     try
       let td = getElementById id in
-      td##textContent <- (Js.some @@ Js.string txt)
+      td##textContent <- (Js.some @@ Js.string (txt_of_cell c))
     with _ -> ()
 
+  (* TODO: Updates are needed here - when loading a merged cell, need to render it as well. *)
+  (*       Maybe create a function called render_merged_cell *)
   (* Update the DOM with spreadsheet data loaded from disc *)
   let load_and_update () =
     lwt ss_string = %load_from_disc' () in
-    let (kv_list : ((int * int) * string) list) = parse_ss_string ss_string in
+    let (kv_list : ((int * int) * cell) list) =
+      parse_ss_string ss_string |> List.map (fun c -> ((key_of_cell c), c))
+    in
     replace_h kv_list;
-    Hashtbl.iter (fun (k : int * int) (v : string) -> update_td k v) h;
+    Hashtbl.iter (fun (k : int * int) (v : cell) -> update_td k v) h;
     Lwt.return_unit
 
   (* Save the entire contents of the hashtbl to the server *)
@@ -328,7 +385,7 @@
         Js._true
     )
 
-(* Load the entire contents of the spreadsheet from the server *)
+  (* Load the entire contents of the spreadsheet from the server *)
   let load_ss_handler =
     handler (fun _ ->
         let () = ignore @@ load_and_update () in
@@ -356,7 +413,7 @@
       handler (fun (e : keyboardEvent Js.t) ->
         if e##keyCode = 27 (* Escape Key Code *)
         then (
-          store_cell (key_of_id @@ Js.to_string td##id) (Js.to_string txt##value);
+          update_cell_in_h (key_of_id @@ Js.to_string td##id) (Js.to_string txt##value);
           removeChild document##body div;
           td##textContent <- Js.some txt##value
         )
@@ -1264,6 +1321,18 @@
       | false, _, _      -> `Fail "Cannot merge already merged cells!"
       | true, _, _       -> `Fail "Only a rectangular area can be merged"
 
+  let store_fresh_merged_cell ~top_row ~left_col ~width ~height txt =
+    let bot_row = top_row + height - 1 in
+    let right_col = left_col + width - 1 in
+    store_cell (top_row, left_col) (MergedCell {
+        top_row    = top_row;
+        bottom_row = bot_row;
+        left_col   = left_col;
+        right_col  = right_col;
+        id         = id_of_key (top_row) (left_col);
+        txt        = txt
+  })
+
   let merge_selected_area () =
     match merge_checks () with
     | `Fail msg -> window##alert (Js.string msg)
@@ -1299,6 +1368,7 @@
               new_td##onmousedown <- click_handler new_td;
               new_td##ondblclick <- dbl_click_handler new_td;
               new_td##id <- old_td##id;
+              store_fresh_merged_cell ~top_row:trn ~left_col:lcn ~width ~height "";
               replaceChild tr new_td old_td;
               selected_cell := None;
               (* Register the merged cell in h *)

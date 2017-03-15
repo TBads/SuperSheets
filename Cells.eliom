@@ -257,6 +257,9 @@
   let h : ((int * int), cell) Hashtbl.t = Hashtbl.create 100
 
   let store_cell (key : int * int) (value : cell) =
+    ignore @@ %shell_print "\n\nstore_cell:\n";
+    ignore @@ %shell_print "\n";
+    ignore @@ %shell_print @@ string_of_cell value;
     if Hashtbl.mem h key
     then Hashtbl.replace h key value
     else Hashtbl.add h key value
@@ -372,12 +375,20 @@
 
   (* Parse a spreadsheet string into a ((int * int), cell) list *)
   let parse_ss_string (ss_string : string) =
+    ignore @@ %shell_print "\n\nparse_ss_string:\n";
+    let () =
+      Yojson.Basic.from_string ss_string
+      |> Yojson.Basic.Util.to_assoc
+      |> List.map cell_of_json
+      |> List.iter (fun c -> ignore @@ %shell_print @@ string_of_cell c)
+    in
     Yojson.Basic.from_string ss_string
     |> Yojson.Basic.Util.to_assoc
     |> List.map cell_of_json
 
   (* Clear all data out of h, and replace it with the new input [key, value] list *)
   let replace_h (kv_list :  ((int * int) * cell) list) =
+    ignore @@ %shell_print "\n\nreplace_h:\n";
     Hashtbl.clear h;
     List.iter (fun (kv : (int * int) * cell) -> store_cell (fst kv) (snd kv)) kv_list
 
@@ -623,7 +634,7 @@
       Js._false
     )
 
-  let merge_area (cl : cell list) =
+  let merge_area ?(blank_cell = false) (cl : cell list) =
     match merge_checks cl with
     | `Fail msg -> window##alert (Js.string msg)
     | `Pass ->
@@ -658,7 +669,9 @@
               new_td##onmousedown <- click_handler new_td;
               new_td##ondblclick <- dbl_click_handler new_td;
               new_td##id <- old_td##id;
-              store_fresh_merged_cell ~top_row:trn ~left_col:lcn ~width ~height "";
+              if blank_cell
+              then store_fresh_merged_cell ~top_row:trn ~left_col:lcn ~width ~height ""
+              else ();
               replaceChild tr new_td old_td;
               selected_cell := None;
               (* Register the merged cell in h *)
@@ -736,8 +749,10 @@
       with _ -> ()
 
   (* Update the DOM with spreadsheet data loaded from disc *)
-  let load_and_update () =
+let load_and_update () =
+    ignore @@ %shell_print "\n\nload_and_update\n";
     lwt ss_string = %load_from_disc' () in
+    ignore @@ %shell_print ss_string; (* OK HERE *)
     let (kv_list : ((int * int) * cell) list) =
       parse_ss_string ss_string |> List.map (fun c -> ((key_of_cell c), c))
     in
@@ -1519,7 +1534,7 @@
   let merge_selected_area () =
     match !selected_area with
     | None -> ()
-    | Some sa -> merge_area sa
+    | Some sa -> merge_area ~blank_cell:true sa
 
   let merge_area_button () =
     let btn = createButton document in
@@ -1528,4 +1543,12 @@
     let body = document##body in
     appendChild body btn
 
+  let print_h () =
+    Hashtbl.iter (fun k c -> ignore @@ %shell_print @@ string_of_cell c) h
+
+  let print_h_button () =
+    let btn = createButton document in
+    btn##textContent <- Js.some @@ Js.string "Print Hashtable";
+    btn##onmouseup <- handler (fun _ -> print_h (); Js._true);
+    appendChild document##body btn
 }}

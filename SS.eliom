@@ -63,6 +63,7 @@ let () =
      let _ = {unit{save_button ()}} in
      let _ = {unit{load_button ()}} in
      let _ = {unit{merge_area_button ()}} in
+     let _ = {unit{print_h_button ()}} in
       Lwt.return
         (Eliom_tools.F.html
            ~title:"SS"

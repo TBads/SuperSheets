@@ -1,46 +1,38 @@
-(* TODO: Need some unit tests for this file, not sure the ast is being build 100% correctly *)
+(* TODO: Need to be fully handle parentheses, exponents, cell references and function calls *)
 
-type string_token =
-  | Formula
+type token =
+  | FormulaBegin
   | Number of float
   | Add
   | Subtract
   | Multiply
   | Divide
+  | LeftParen
+  | RightParen
   | StringTokenError of string
-
-type ast_token =
-  | FormulaBegin of ast_token
-  | Number of float
-  | Add of ast_token * ast_token
-  | Subtract of ast_token * ast_token
-  | Multiply of ast_token * ast_token
-  | Divide of ast_token * ast_token
-  | AstTokenError of string
-
-type eval_result =
-  | Text of string
-  | Number of string
-  | Error of string
-
-let string_of_string_token =
-  function
-  | Formula -> "Formula("
-  | Number n -> ("Number " ^ (string_of_float n))
-  | Add -> "Add"
-  | Subtract -> "Subtract"
-  | Multiply -> "Multiply"
-  | Divide -> "Divide"
-  | StringTokenError s -> "StringTokenError: " ^ s
 
 let token_of_string s =
   match s with
-  | "=" -> Formula
+  | "=" -> FormulaBegin
   | "+" -> Add
   | "-" -> Subtract
   | "*" -> Multiply
   | "/" -> Divide
-  | _   -> try Number (float_of_string s) with | _ -> StringTokenError s
+  (*| "(" -> LeftParen
+    | ")" -> RightParen*)
+  | _   -> try Number (float_of_string s) with _ -> StringTokenError s
+
+let string_of_token =
+  function
+  | FormulaBegin -> "FormulaBegin"
+  | Number n -> "Number" ^ (string_of_float n)
+  | Add -> "Add"
+  | Subtract -> "Subtract"
+  | Multiply -> "Multiply"
+  | Divide -> "Divide"
+  | LeftParen -> "LeftParen"
+  | RightParen -> "RightParen"
+  | StringTokenError s -> ("StringTokenError " ^ s)
 
 (* Parse a string into a list of strings that will be evaluated as tokens *)
 let parse_string s =
@@ -50,43 +42,145 @@ let parse_string s =
   |> List.map (function | Str.Delim x -> x | Str.Text x -> x)
   |> List.map token_of_string
 
-(* Build an AST from a string list *)
-let rec build_ast ?(token_stack = []) (l : string_token list) =
-  match token_stack, l with
-  | [], [] -> AstTokenError "Not a formula"
-  | h :: t, [] -> h
-  | [], Formula :: tl -> FormulaBegin (build_ast tl)
-  | h :: t, Add :: tl -> Add (h, build_ast tl)
-  | h :: t, Subtract :: tl -> Subtract (h, build_ast tl)
-  | h :: t, Multiply :: Number n :: tl ->
-      build_ast ~token_stack:(Multiply (h,  Number n) :: token_stack) tl
-   | h :: t, Divide :: Number n :: tl ->
-      build_ast ~token_stack:(Divide (h,  Number n) :: token_stack) tl
-  | [], Number n :: tl -> build_ast ~token_stack:(Number n :: token_stack) tl
-  | _, _ -> failwith "Error: build_ast"
+let rec list_of_que ?(acc = []) q =
+  try
+    list_of_que ~acc:(Queue.pop q :: acc) q
+  with
+    empty -> acc
 
-let rec eval_ast ast =
-  match ast with
-  | FormulaBegin x -> eval_ast x
-  | (Number n) -> n
-  | (Add (x, y)) -> eval_ast x +. eval_ast y
-  | (Subtract (x, y)) -> eval_ast x -. eval_ast y
-  | (Multiply (x, y)) -> eval_ast x *. eval_ast y
-  | (Divide (x, y)) -> eval_ast x /. eval_ast y
-  | AstTokenError s -> failwith s
+let stack_of_list l =
+  let s = Stack.create () in
+
+  let rec push_to_stack xs =
+    match xs with
+    | [] -> s
+    | hd :: tl -> Stack.push hd s; push_to_stack tl
+  in
+
+  push_to_stack l
+
+let stack_of_que q =
+  list_of_que q |> stack_of_list
+
+(* Shunting-yard algorithm *)
+let shunting_yard (l : token list) =
+
+  let out_que, op_stack = Queue.create (), Stack.create () in
+
+  (* TODO: handling of parentheses *)
+  let rec run_algo tokens =
+    match tokens with
+    | [] -> (try (Queue.push (Stack.pop op_stack) out_que; run_algo tokens) with empty -> ())
+    | FormulaBegin :: tl -> run_algo tl
+    | Number n :: tl -> (
+        Queue.push (Number n) out_que;
+        run_algo tl
+      )
+    | Add :: tl -> (
+        try
+          let o2 = Stack.pop op_stack in
+          Queue.push o2 out_que;
+          run_algo tokens
+        with
+          empty -> (Stack.push Add op_stack; run_algo tl)
+      )
+    | Subtract :: tl -> (
+        try
+          let o2 = Stack.pop op_stack in
+          Queue.push o2 out_que;
+          run_algo tokens
+        with
+          empty -> (Stack.push Subtract op_stack; run_algo tl)
+      )
+    | Multiply as o1 :: tl -> (
+        try
+          let o2 = Stack.top op_stack in
+          if o2 = Multiply || o2 = Divide
+          then (Queue.push (Stack.pop op_stack) out_que; run_algo tokens)
+          else (Stack.push Multiply op_stack; run_algo tl)
+        with
+          empty -> (Stack.push Multiply op_stack; run_algo tl)
+      )
+    | Divide as o1 :: tl -> (
+        try
+          let o2 = Stack.top op_stack in
+          if o2 = Multiply || o2 = Divide
+          then (Queue.push (Stack.pop op_stack) out_que; run_algo tokens)
+          else (Stack.push Divide op_stack; run_algo tl)
+        with
+          empty -> (Stack.push Divide op_stack; run_algo tl)
+      )
+
+    (*| LeftParen :: tl -> (Stack.push LeftParen op_stack; run_algo tl)
+    | RightParen :: tl ->
+      if Stack.top op_stack = LeftParen
+      then (Queue.push (Stack.pop op_stack) out_que; run_algo tl)
+      else (Queue.push (Stack.pop op_stack) out_que; run_algo tokens)*)
+    | _ -> failwith "Error: shunting_yard"
+  in
+
+  run_algo l;
+  List.rev @@ list_of_que out_que
+
+let float_of_token =
+  function
+  | Number n -> n
+  | _ -> failwith "Error: float_of_token"
+
+let print_stack s =
+  let printable_stack = Stack.copy s in
+
+  let rec print_items () =
+    try
+      print_endline (string_of_token @@ Stack.pop printable_stack);
+      print_items ()
+    with _ -> print_newline ()
+  in
+
+  print_items ()
+
+(* Evaluate a stack of tokens in reverse polish notation *)
+let eval l =
+  let (s : token Stack.t) = Stack.create () in
+
+  let rec run tokens =
+    match tokens with
+    | [] -> ()
+    | Number n :: tl -> (
+        (Stack.push (Number n) s; run tl)
+      )
+    | Add :: tl -> (
+        let n1 = float_of_token @@ Stack.pop s in
+        let n2 = float_of_token @@ Stack.pop s in
+        Stack.push (Number (n1 +. n2)) s;
+        run tl
+      )
+    | Subtract :: tl -> (
+        let n1 = float_of_token @@ Stack.pop s in
+        let n2 = float_of_token @@ Stack.pop s in
+        Stack.push (Number (n2 -. n1)) s;
+        run tl
+      )
+
+    | Multiply :: tl -> (
+        let n1 = float_of_token @@ Stack.pop s in
+        let n2 = float_of_token @@ Stack.pop s in
+        Stack.push (Number (n1 *. n2)) s;
+        run tl
+      )
+    | Divide :: tl -> (
+        let n1 = float_of_token @@ Stack.pop s in
+        let n2 = float_of_token @@ Stack.pop s in
+        Stack.push (Number (n2 /. n1)) s;
+        run tl
+      )
+    | _ -> failwith "Error: eval"
+  in
+
+  run l;
+  Stack.pop s
 
 let eval_string s =
-  try (
-    if String.sub s 0 1 = "="
-    then (
-      parse_string s
-      |> build_ast
-      |> eval_ast
-      |> fun x -> Number (string_of_float x)
-    )
-    else
-      Text s
-  )
-  with
-  | Invalid_argument _ -> Text s
-  | _ -> Error "Error: eval_string: Dont know how to handle that."
+  parse_string s
+  |> shunting_yard
+  |> eval

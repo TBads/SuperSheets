@@ -1,10 +1,11 @@
-(* TODO: Need to be fully handle exponents, cell references and function calls *)
+(* TODO: Need to be fully handle cell references and function calls *)
 
 type operator =
   | Add
   | Subtract
   | Multiply
   | Divide
+  | Exp
 
 type token =
   | FormulaBegin
@@ -21,6 +22,7 @@ let token_of_string s =
   | "-" -> Op Subtract
   | "*" -> Op Multiply
   | "/" -> Op Divide
+  | "^" -> Op Exp
   | "(" -> LeftParen
   | ")" -> RightParen
   | _   -> try Number (float_of_string s) with _ -> StringTokenError s
@@ -33,6 +35,7 @@ let string_of_token =
   | Op Subtract -> "Subtract"
   | Op Multiply -> "Multiply"
   | Op Divide -> "Divide"
+  | Op Exp -> "Exp"
   | LeftParen -> "LeftParen"
   | RightParen -> "RightParen"
   | StringTokenError s -> ("StringTokenError " ^ s)
@@ -40,7 +43,7 @@ let string_of_token =
 (* Parse a string into a list of strings that will be evaluated as tokens *)
 let parse_string s =
   Str.split (Str.regexp "[ \t]+") s
-  |> List.map (Str.full_split (Str.regexp "[= + /- - /* // ( )]"))
+  |> List.map (Str.full_split (Str.regexp "[= + /- - /* // ( ) ^]"))
   |> List.flatten
   |> List.map (function | Str.Delim x -> x | Str.Text x -> x)
   |> List.map token_of_string
@@ -101,10 +104,7 @@ let shunting_yard (l : token list) =
     match tokens with
     | [] -> (try (Queue.push (Stack.pop op_stack) out_que; run_algo tokens) with empty -> ())
     | FormulaBegin :: tl -> run_algo tl
-    | Number n :: tl -> (
-        Queue.push (Number n) out_que;
-        run_algo tl
-      )
+    | Number n :: tl -> (Queue.push (Number n) out_que; run_algo tl)
     | Op Add as o1 :: tl -> (
         try
           let o2 = Stack.top op_stack in
@@ -149,6 +149,7 @@ let shunting_yard (l : token list) =
         with
           empty -> (Stack.push (Op Divide) op_stack; run_algo tl)
       )
+    | Op Exp as o1 :: tl -> (Stack.push (Op Exp) op_stack; run_algo tl)
     | LeftParen :: tl -> (
         Stack.push LeftParen op_stack;
         run_algo tl
@@ -201,6 +202,13 @@ let eval l =
         let n1 = float_of_token @@ Stack.pop s in
         let n2 = float_of_token @@ Stack.pop s in
         Stack.push (Number (n2 /. n1)) s;
+        run tl
+      )
+    | Op Exp :: tl -> (
+        let n1 = float_of_token @@ Stack.pop s in
+        let n2 = float_of_token @@ Stack.pop s in
+        print_endline ("n1 = " ^ string_of_float n1 ^ ", n2 = " ^ string_of_float n2);
+        Stack.push (Number (n2 ** n1)) s;
         run tl
       )
     | _ -> failwith "Error: eval"

@@ -96,6 +96,14 @@
 
   let string_of_cell (c : cell) =
     match c with
+    | SingleCell sc ->
+      "\n{" ^
+      "  row    = " ^ (string_of_int sc.row) ^ ";" ^
+      "  col    = " ^ (string_of_int sc.col) ^ ";" ^
+      "  id     = " ^ sc.id ^ ";" ^
+      "  txt_in = " ^ sc.txt_in ^ ";" ^
+      "  txt    = " ^ sc.txt ^
+      "}"
     | MergedCell mc -> (
         "\n{" ^
         "  top_row     = " ^ (string_of_int mc.top_row) ^ ";" ^
@@ -103,18 +111,10 @@
         "  left_col    = " ^ (string_of_int mc.left_col) ^ ";" ^
         "  right_col   = " ^ (string_of_int mc.right_col) ^ ";" ^
         "  id          = " ^ mc.id ^ ";" ^
-        "  txt_in   = " ^ mc.txt_in ^ ";" ^
-        "  txt  = " ^ mc.txt ^
+        "  txt_in      = " ^ mc.txt_in ^ ";" ^
+        "  txt         = " ^ mc.txt ^
         "}"
       )
-    | SingleCell sc ->
-      "\n{" ^
-      "  row = " ^ (string_of_int sc.row) ^ ";" ^
-      "  col = " ^ (string_of_int sc.col) ^ ";" ^
-      "  id  = " ^ sc.id ^ ";" ^
-      "  txt_in = " ^ sc.txt_in ^ ";" ^
-      "  txt = " ^ sc.txt ^
-      "}"
 
   let string_of_cell_list (cl : cell list option) =
     match cl with
@@ -318,16 +318,8 @@ let txt_in_of_id (id : Js.js_string Js.t) =
 
   (* Update the text fields in a cell residing in h *)
   let update_cell_in_h (key : int * int) (txt : string) =
-    ignore @@ %shell_print "\n\nupdate_cell_in_h:";
-    let () =
-      try
-        ignore @@ %shell_print ("\nFormulas.eval_string " ^ txt ^ " = " ^ Formulas.eval_string txt)
-      with
-        _ -> ignore @@ %shell_print ("\nFailed to evaluate Formulas.eval_string " ^ txt)
-    in
     if Hashtbl.mem h key
     then (
-      ignore @@ %shell_print "\nHashtbl.mem h key";
       let old_cell = Hashtbl.find h key in
       let new_cell =
         match old_cell with
@@ -350,15 +342,15 @@ let txt_in_of_id (id : Js.js_string Js.t) =
       in
       Hashtbl.replace h key new_cell
     )
-    else
-    ignore @@ %shell_print "\nelse";
+    else (
       store_cell key (SingleCell {
           row    = fst key;
           col    = snd key;
           id     = id_of_key (fst key) (snd key);
           txt_in = txt;
           txt    = Formulas.eval_string txt
-        })
+      })
+    )
 
   let get_cell key = Hashtbl.find h key
 
@@ -369,6 +361,7 @@ let txt_in_of_id (id : Js.js_string Js.t) =
            "\"row\" : " ^ (string_of_int sc.row) ^ "," ^
            "\"col\" : " ^ (string_of_int sc.col) ^ "," ^
            "\"id\" : \"" ^ sc.id ^ "\"," ^
+           "\"txt_in\" : \"" ^ sc.txt_in ^ "\"," ^
            "\"txt\" : \"" ^ sc.txt ^ "\"" ^
          "}")
      | MergedCell mc ->
@@ -378,6 +371,7 @@ let txt_in_of_id (id : Js.js_string Js.t) =
           "\"left_col\" : " ^ (string_of_int mc.left_col) ^ "," ^
           "\"right_col\" : " ^ (string_of_int mc.right_col) ^ "," ^
           "\"id\" : \"" ^ mc.id ^ "\"," ^
+          "\"txt_in\" : \"" ^ mc.txt_in ^ "\"," ^
           "\"txt\" : \"" ^ mc.txt ^ "\"" ^
         "}"
 
@@ -788,10 +782,8 @@ let txt_in_of_id (id : Js.js_string Js.t) =
       with _ -> ()
 
   (* Update the DOM with spreadsheet data loaded from disc *)
-let load_and_update () =
-    ignore @@ %shell_print "\n\nload_and_update\n";
+  let load_and_update () =
     lwt ss_string = %load_from_disc' () in
-    ignore @@ %shell_print ss_string; (* OK HERE *)
     let (kv_list : ((int * int) * cell) list) =
       parse_ss_string ss_string |> List.map (fun c -> ((key_of_cell c), c))
     in
@@ -799,7 +791,6 @@ let load_and_update () =
     Hashtbl.iter (fun (k : int * int) (v : cell) -> update_td k v) h;
     Lwt.return_unit
 
-  (* TODO: Cannot save & load spreadsheet anymore *)
   (* Save the entire contents of the hashtbl to the server *)
   let save_ss_handler =
     handler (fun _ ->

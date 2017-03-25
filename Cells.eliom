@@ -1,3 +1,5 @@
+(* TODO: Pick back up by making sure that text_in is working everywhere that it needs to be *)
+
 {server{
 
   (* Print a string to the server side shell -- for testing *)
@@ -43,12 +45,17 @@
 
   open Dom
   open Dom_html
+  open Formulas
 
+  (* NOTE: In single_cell and merged_cell, txt_in is the text input by the user and txt is the *)
+  (*  text shown in the cell. These will be different if the user has typed int a formula.     *)
+  (*  Ex. If txt_in = "=max(3,5)" then txt = "5"*)
   type single_cell = {
-    row : int;
-    col : int;
-    id  : string;
-    txt : string
+    row    : int;
+    col    : int;
+    id     : string;
+    txt_in : string;
+    txt    : string
   }
 
   type merged_cell = {
@@ -57,6 +64,7 @@
     left_col   : int;
     right_col  : int;
     id         : string;
+    txt_in     : string;
     txt        : string
   }
 
@@ -90,12 +98,13 @@
     match c with
     | MergedCell mc -> (
         "\n{" ^
-        "  top_row    = " ^ (string_of_int mc.top_row) ^ ";" ^
-        "  bottom_row = " ^ (string_of_int mc.bottom_row) ^ ";" ^
-        "  left_col   = " ^ (string_of_int mc.left_col) ^ ";" ^
-        "  right_col  = " ^ (string_of_int mc.right_col) ^ ";" ^
-        "  id         = " ^ mc.id ^ ";" ^
-        "  txt        = " ^ mc.txt ^ "" ^
+        "  top_row     = " ^ (string_of_int mc.top_row) ^ ";" ^
+        "  bottom_row  = " ^ (string_of_int mc.bottom_row) ^ ";" ^
+        "  left_col    = " ^ (string_of_int mc.left_col) ^ ";" ^
+        "  right_col   = " ^ (string_of_int mc.right_col) ^ ";" ^
+        "  id          = " ^ mc.id ^ ";" ^
+        "  txt_in   = " ^ mc.txt_in ^ ";" ^
+        "  txt  = " ^ mc.txt ^
         "}"
       )
     | SingleCell sc ->
@@ -103,7 +112,8 @@
       "  row = " ^ (string_of_int sc.row) ^ ";" ^
       "  col = " ^ (string_of_int sc.col) ^ ";" ^
       "  id  = " ^ sc.id ^ ";" ^
-      "  txt = " ^ sc.txt ^ "" ^
+      "  txt_in = " ^ sc.txt_in ^ ";" ^
+      "  txt = " ^ sc.txt ^
       "}"
 
   let string_of_cell_list (cl : cell list option) =
@@ -195,6 +205,7 @@
           row = r_num;
           col = c_num;
           id  = real_id;
+          txt_in = ""; (* TODO *)
           txt = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "")
         })
       | _ -> Some (MergedCell {
@@ -203,6 +214,7 @@
           left_col   = c_num;
           right_col  = c_num + cs - 1;
           id         = real_id;
+          txt_in     = ""; (* TODO *)
           txt        = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "")
         })
     with _ -> None (* TODO: Log/Handle specific errors here *)
@@ -256,6 +268,17 @@
   (* Keys take the form of (row,col), ex. row 1 column 3 has the key "1_3" *)
   let h : ((int * int), cell) Hashtbl.t = Hashtbl.create 100
 
+let txt_in_of_id (id : Js.js_string Js.t) =
+    ignore @@ %shell_print "\n\ntxt_in_of_id:";
+    let id' = Js.to_string id in
+    ignore @@ %shell_print ("\nid' = " ^ id');
+    try
+      match Hashtbl.find h (key_of_id id') with
+      | SingleCell sc -> sc.txt_in
+      | MergedCell mc -> mc.txt_in
+    with
+      not_found -> (ignore @@ %shell_print "\nnot_found"; "")
+
   let store_cell (key : int * int) (value : cell) =
     ignore @@ %shell_print "\n\nstore_cell:\n";
     ignore @@ %shell_print "\n";
@@ -289,21 +312,31 @@
         left_col   = left_col;
         right_col  = right_col;
         id         = id_of_key (top_row) (left_col);
-        txt        = txt
+        txt_in     = txt;
+        txt        = Formulas.eval_string txt
   })
 
   (* Update the text fields in a cell residing in h *)
   let update_cell_in_h (key : int * int) (txt : string) =
+    ignore @@ %shell_print "\n\nupdate_cell_in_h:";
+    let () =
+      try
+        ignore @@ %shell_print ("\nFormulas.eval_string " ^ txt ^ " = " ^ Formulas.eval_string txt)
+      with
+        _ -> ignore @@ %shell_print ("\nFailed to evaluate Formulas.eval_string " ^ txt)
+    in
     if Hashtbl.mem h key
     then (
+      ignore @@ %shell_print "\nHashtbl.mem h key";
       let old_cell = Hashtbl.find h key in
       let new_cell =
         match old_cell with
         | SingleCell sc -> SingleCell {
-            row = sc.row;
-            col = sc.row;
-            id  = sc.id;
-            txt = txt
+            row    = sc.row;
+            col    = sc.row;
+            id     = sc.id;
+            txt_in = txt;
+            txt    = Formulas.eval_string txt
           }
         | MergedCell mc -> MergedCell {
             top_row    = mc.top_row;
@@ -311,17 +344,20 @@
             left_col   = mc.left_col;
             right_col  = mc.right_col;
             id         = mc.id;
-            txt        = txt
+            txt_in     = txt;
+            txt        = Formulas.eval_string txt
           }
       in
       Hashtbl.replace h key new_cell
     )
     else
+    ignore @@ %shell_print "\nelse";
       store_cell key (SingleCell {
-          row = fst key;
-          col = snd key;
-          id  = id_of_key (fst key) (snd key);
-          txt = txt
+          row    = fst key;
+          col    = snd key;
+          id     = id_of_key (fst key) (snd key);
+          txt_in = txt;
+          txt    = Formulas.eval_string txt
         })
 
   let get_cell key = Hashtbl.find h key
@@ -349,18 +385,20 @@
     let open Yojson.Basic.Util in
     match s with
     | "SingleCell" -> SingleCell {
-        row = member "row" j |> to_int;
-        col = member "col" j |> to_int;
-        id  = member "id"  j |> to_string;
-        txt = member "txt" j |> to_string
+        row    = to_int @@ member "row" j;
+        col    = to_int @@ member "col" j;
+        id     = to_string @@ member "id" j;
+        txt_in = to_string @@ member "txt_in" j;
+        txt    = to_string @@ member "txt" j
       }
     | "MergedCell" -> MergedCell {
-        top_row    = member "top_row" j |> to_int;
-        bottom_row = member "bottom_row" j |> to_int;
-        left_col   = member "left_col" j |> to_int;
-        right_col  = member "right_col" j |> to_int;
-        id         = member "id" j |> to_string;
-        txt        = member "txt" j |> to_string
+        top_row    = to_int @@ member "top_row" j;
+        bottom_row = to_int @@ member "bottom_row" j;
+        left_col   = to_int @@ member "left_col" j;
+        right_col  = to_int @@ member "right_col" j;
+        id         = to_string @@ member "id" j;
+        txt_in     = to_string @@ member "txt_in" j;
+        txt        = to_string @@ member "txt" j
       }
     | _ -> failwith "Error: Received bad json!"
 
@@ -594,15 +632,23 @@
       handler (fun (e : keyboardEvent Js.t) ->
         if e##keyCode = 27 (* Escape Key Code *)
         then (
+          ignore @@ %shell_print "\ne##keyCode = 27";
           update_cell_in_h (key_of_id @@ Js.to_string td##id) (Js.to_string txt##value);
+          ignore @@ %shell_print "\nPoint1";
           removeChild document##body div;
-          td##textContent <- Js.some txt##value
+          ignore @@ %shell_print "\nPoint2";
+          td##textContent <-
+            Js.to_string txt##value
+            |> Formulas.eval_string
+            |> Js.string
+            |> Js.some; (*txt##value;*)
+          ignore @@ %shell_print "\nPoint3"
         )
         else ();
         Js._true
       )
 
-  let formula_bar ~td ~existing_text () =
+  let formula_bar ~td () =
     let div = createDiv document in
     div##className <- Js.string "input-group";
     let span = createSpan document in
@@ -613,11 +659,7 @@
     txt##className <- Js.string "form-control";
     txt##style##width <- Js.string "100%";
     txt##placeholder <- Js.string "Type Here...";
-    let () =
-      match Js.to_string @@ Js.Opt.get existing_text (fun () -> Js.string "") with
-      | "" -> ()
-      | _ as t -> txt##defaultValue <- Js.string t
-    in
+    txt##defaultValue <- Js.string (txt_in_of_id td##id);
     appendChild div span;
     appendChild div txt;
     appendChild document##body div;
@@ -626,11 +668,8 @@
 
   let dbl_click_handler (td : tableCellElement Js.t) =
     handler (fun _ ->
-      let existing_text = td##textContent in
-      ignore @@ %shell_print
-        (Js.to_string @@ Js.Opt.get existing_text (fun () -> Js.string "No Existing Text"));
       td##textContent <- Js.null;
-      formula_bar ~td ~existing_text ();
+      formula_bar ~td ();
       Js._false
     )
 
@@ -760,6 +799,7 @@ let load_and_update () =
     Hashtbl.iter (fun (k : int * int) (v : cell) -> update_td k v) h;
     Lwt.return_unit
 
+  (* TODO: Cannot save & load spreadsheet anymore *)
   (* Save the entire contents of the hashtbl to the server *)
   let save_ss_handler =
     handler (fun _ ->

@@ -6,14 +6,14 @@
 PROJECT_NAME := SS
 
 # Source files for the server
-SERVER_FILES := Cells.eliom UnitTests.eliom SS.eliom
+SERVER_FILES := Config.ml Cells.eliom UnitTests.eliom Types.ml Db_funs.ml SS.eliom
 # Source files for the client
-CLIENT_FILES := Formulas.ml Cells.eliom UnitTests.eliom SS.eliom
+CLIENT_FILES := Formulas.ml Cells.eliom UnitTests.eliom Types.ml SS.eliom
 
 # OCamlfind packages for the server
-SERVER_PACKAGES :=
+SERVER_PACKAGES := mysql safepass cryptokit
 # OCamlfind packages for the client
-CLIENT_PACKAGES := str yojson
+CLIENT_PACKAGES := mysql safepass str yojson
 
 # Directory with files to be statically served
 LOCAL_STATIC = static

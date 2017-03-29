@@ -1,0 +1,19 @@
+* {
+    font-family: sans-serif;
+}
+
+#header_button  {
+  background-color: transparent;
+  border-color: transparent;
+  color: #7CFC00;
+}
+
+#sheet {
+  padding-top: 50px;
+}
+
+/* Header Buttons */
+a.caml_link.caml_request_node {
+    color: white;
+    font-weight: bold;
+}

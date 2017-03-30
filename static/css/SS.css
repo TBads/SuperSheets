@@ -71,3 +71,11 @@ a.caml_request_node {
 #main_table {
     margin: 5px auto;
 }
+
+#login_form {
+  background-color: white;
+  /*border: 5px solid red;*/
+  width: 400px;
+  margin: 0px auto;
+  margin-top: 80px;
+}

@@ -6,8 +6,6 @@
   open Eliom_parameter
 }}
 
-(* TODO Need a land page for the user, which lists all spreadsheets, etc... *)
-
 open Types
 
 (* Use for communication only on the Main Trading page, i.e. msg_box, active_orders, etc... *)
@@ -46,6 +44,9 @@ let logout_service =
 let login_verify_service =
   Eliom_service.Http.post_service ~fallback:login_service
                                   ~post_params:(string "username" ** string "password") ()
+
+let user_page_service =
+  Eliom_service.Http.service ~path:["my_sheets"] ~get_params:Eliom_parameter.unit ()
 
 let test_button =
   div ~a:[a_class ["btn btn-default btn-lg"]; a_id "header_button"]
@@ -416,6 +417,26 @@ let () =
             ]
            ])))
 
+(* User Landing Page Service *)
+let () =
+  Eliom_registration.Html5.register
+    ~service:user_page_service
+    (fun () () ->
+      (* Kick off the thread *)
+      Lwt.return @@ Eliom_reference.Volatile.get user_info
+      >>= fun user ->
+      Lwt.return
+        (Eliom_tools.F.html
+           ~title:"My Sheets"
+           ~css:[["css"; "SS.css"]]
+           ~other_head:[bootstrap_cdn_link]
+           (body ~a:[a_class ["transparent"]]
+           [header_navbar_skeleton user;
+            div ~a:[a_class ["container"; "margin_top_50px"; "padding_top_50px"]]
+            [h2 ~a:[a_style "margin-top: 50px"] [pcdata "TODO: List User Sheets here..."];
+            ]
+           ])))
+
 (* Verify the users login data and set the session data if the verification passes *)
 let () =
   Eliom_registration.Redirection.register
@@ -432,8 +453,7 @@ let () =
             email = None;
             verified = Some true
           };
-        Lwt.return main_service
+        Lwt.return user_page_service
       )
-      else Lwt.return logout_service
+      else (Lwt.return logout_service)
     )
-

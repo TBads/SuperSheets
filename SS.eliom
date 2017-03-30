@@ -6,7 +6,7 @@
   open Eliom_parameter
 }}
 
-(* TODO get rid of password requirements *)
+(* TODO Need a land page for the user, which lists all spreadsheets, etc... *)
 
 open Types
 
@@ -60,6 +60,14 @@ let sign_up_button (u : user) =
     [a new_account_service [pcdata "Sign Up"] ()
     ]
 
+let infobox_sign_up_button (u : user) =
+  match u.verified with
+  | Some true -> div []
+  | _ ->
+    div ~a:[a_class ["btn btn-default btn-lg"]; a_id "infobox_signup_btn"]
+    [a new_account_service [pcdata "Sign Up"] ()
+    ]
+
 let login_button =
   div ~a:[a_class ["btn btn-default btn-lg"]; a_id "header_button"]
   [a login_service [pcdata "Login"] ()
@@ -94,17 +102,16 @@ let login_logout_button (u : user) =
 *)
 
 let header_navbar_skeleton ?on_page (u : user) =
-  let b0 = [test_button] in
   let b1 = if on_page = Some `SignUp then [] else [sign_up_button u] in
   (* TODO Some `NewAccount *)
-  let b2 = if on_page = Some `Login then [] else [login_logout_button u] in
+  let b2 = [login_logout_button u] in
   let btns =
     match on_page with
-    | Some `SignUp -> b0
-    | Some `NewAccount -> b0 @ b2
-    | Some `Login -> b0 @ b1
-    | Some `Logout -> b0 @ b1
-    | _ -> b0 @ b1
+    | Some `SignUp ->b2
+    | Some `NewAccount -> b2
+    | Some `Login -> b1 @ b2
+    | Some `Logout -> b1
+    | _ -> b1 @ b2
   in
   nav ~a:[a_class ["navbar navbar-fixed-top"]; a_style "background-color: #333;"]
   [div ~a:[a_class ["container-fluid"]]
@@ -233,8 +240,16 @@ let () =
            ~css:[["css";"SS.css"]]
            ~other_head:[bootstrap_cdn_link]
            Html5.F.(
-             body ~a:[a_id "sheet"]
-             [header_navbar_skeleton user
+             body
+             [header_navbar_skeleton user;
+              div ~a:[a_id "dark_section"]
+              [h1 ~a:[a_id "main_page_header"] [pcdata "Super Sheets"];
+               h3 ~a:[a_id "tagline"] [pcdata ("Cloud based automated spreadsheet reporting")];
+               div ~a:[a_id "infobox"]
+               [h4 ~a:[a_id "infobox_header"] [pcdata ("Free 30 day Trial")];
+                infobox_sign_up_button user
+               ];
+              ]
              ]
            )
         )

@@ -8,12 +8,66 @@
   color: #7CFC00;
 }
 
-#sheet {
-  padding-top: 50px;
-}
-
 /* Header Buttons */
 a.caml_link.caml_request_node {
     color: white;
     font-weight: bold;
+}
+
+a.caml_request_node {
+    color: white;
+    font-weight: bold;
+}
+
+#dark_section {
+  width: 100%;
+  height: 400px;
+  background: #634271;
+  background: linear-gradient(to top right, #333, #634271);
+}
+
+#main_page_header {
+  /*border: 2px solid red;*/
+  margin-top: 50px;
+  padding-top: 50px;
+  font-size: 80px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: bold;
+  color: #FFFFFF;
+  text-align: center;
+  height: 175px;
+  width: 100%;
+}
+
+#tagline {
+    width: 800px;
+    color: #FFFFFF;
+    font-style: italic;
+    margin: auto;
+    text-align:center;
+}
+
+#infobox {
+    border: 2px solid #FFFFFF;
+    width: 300px;
+    margin: 45px auto auto;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#infobox_header {
+    color: #FFFFFF;
+    width: 250px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center
+}
+
+#infobox_signup_btn {
+    background-color: #333;
+    margin-bottom: 20px;
+}
+
+#main_table {
+    margin: 5px auto;
 }

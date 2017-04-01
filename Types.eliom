@@ -1,0 +1,39 @@
+{server{
+
+  type user = {
+    username : string option;
+    email    : string option;
+    verified : bool option
+  } deriving (Json)
+
+}}
+
+{client{
+
+  (* NOTE: In single_cell and merged_cell, txt_in is the text input by the user and txt is the *)
+  (*  text shown in the cell. These will be different if the user has typed in a formula.      *)
+  (*  Ex. If txt_in = "=max(3,5)" then txt = "5"                                               *)
+  type single_cell = {
+    row    : int;
+    col    : int;
+    id     : string;
+    txt_in : string;
+    txt    : string
+  }
+
+  type merged_cell = {
+    top_row    : int;
+    bottom_row : int;
+    left_col   : int;
+    right_col  : int;
+    id         : string;
+    txt_in     : string;
+    txt        : string
+  }
+
+  type cell = SingleCell of single_cell | MergedCell of merged_cell
+
+  (* Keys take the form of (row,col), ex. row 1 column 3 has the key "1_3" *)
+  let h : ((int * int), cell) Hashtbl.t = Hashtbl.create 100
+
+}}

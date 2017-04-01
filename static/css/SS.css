@@ -24,6 +24,7 @@ a.caml_request_node {
   height: 400px;
   background: #634271;
   background: linear-gradient(to top right, #333, #634271);
+  margin-bottom: 25px;
 }
 
 #main_page_header {
@@ -69,7 +70,8 @@ a.caml_request_node {
 }
 
 #main_table {
-    margin: 5px auto;
+    margin: auto;
+    width: 800px;
 }
 
 #login_form {
@@ -78,4 +80,13 @@ a.caml_request_node {
   width: 400px;
   margin: 0px auto;
   margin-top: 80px;
+}
+
+#toolbar {
+    width: 800px;
+    height: 50px;
+    margin: auto;
+    border-radius: 10px 10px 0px 0px;
+    border: 1px solid #333;
+    border-bottom: 0px;
 }

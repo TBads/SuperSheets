@@ -2,6 +2,7 @@
 
 {shared{
   open Cells
+  open Types
 }}
 
 {client{

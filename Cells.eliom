@@ -1,4 +1,5 @@
-(* TODO: Pick back up by making sure that text_in is working everywhere that it needs to be *)
+(* TODO: Need to make references to other cells work *)
+(* TODO: Need a tool bar with icon buttons           *)
 
 {server{
 
@@ -46,29 +47,7 @@
   open Dom
   open Dom_html
   open Formulas
-
-  (* NOTE: In single_cell and merged_cell, txt_in is the text input by the user and txt is the *)
-  (*  text shown in the cell. These will be different if the user has typed int a formula.     *)
-  (*  Ex. If txt_in = "=max(3,5)" then txt = "5"*)
-  type single_cell = {
-    row    : int;
-    col    : int;
-    id     : string;
-    txt_in : string;
-    txt    : string
-  }
-
-  type merged_cell = {
-    top_row    : int;
-    bottom_row : int;
-    left_col   : int;
-    right_col  : int;
-    id         : string;
-    txt_in     : string;
-    txt        : string
-  }
-
-  type cell = SingleCell of single_cell | MergedCell of merged_cell
+  open Types
 
   (* Parameters *)
   let num_sheet_rows = 10
@@ -266,9 +245,9 @@
       |> List.length
 
   (* Keys take the form of (row,col), ex. row 1 column 3 has the key "1_3" *)
-  let h : ((int * int), cell) Hashtbl.t = Hashtbl.create 100
+  (*let h : ((int * int), cell) Hashtbl.t = Hashtbl.create 100*)
 
-let txt_in_of_id (id : Js.js_string Js.t) =
+  let txt_in_of_id (id : Js.js_string Js.t) =
     ignore @@ %shell_print "\n\ntxt_in_of_id:";
     let id' = Js.to_string id in
     ignore @@ %shell_print ("\nid' = " ^ id');
@@ -1456,6 +1435,13 @@ let txt_in_of_id (id : Js.js_string Js.t) =
         | _ -> (); Js._true
       )
 
+  (* Toolbar with Buttons *)
+  let toolbar () =
+    let toolbar = createDiv document in
+    toolbar##style##backgroundColor <- Js.string cell_background_color;
+    toolbar##id <- Js.string "toolbar";
+    toolbar
+
   (* Create a new & empty cell *)
   let new_cell id =
     let td = createTd document in
@@ -1545,7 +1531,7 @@ let txt_in_of_id (id : Js.js_string Js.t) =
       appendChild tbdy tr;
       fresh_table ~table_body:(Some tbdy) ~nrows ~ncols ()
     )
-    else
+    else (
       max_row := nrows;
       max_col := ncols;
       let tbl = createTable document in
@@ -1554,10 +1540,17 @@ let txt_in_of_id (id : Js.js_string Js.t) =
       tbl##id <- Js.string "main_table";
       tbl##style##borderCollapse <- Js.string "collapse";
       let body = document##body in
+      let tbl_div = createDiv document in
+      tbl_div##id <- Js.string "tbl_div";
       body##onkeydown <- key_handler;
       body##onkeyup <- key_release_handler;
+      (*appendChild tbl tbdy;
+        appendChild body tbl*)
+      appendChild tbl_div (toolbar ());
       appendChild tbl tbdy;
-      appendChild body tbl
+      appendChild tbl_div tbl;
+      appendChild body tbl_div
+    )
 
 (* TODO: Ther user should be able to select a single merged cell and click the merge button *)
 (* to un-merge the cell                                                                     *)

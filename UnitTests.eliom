@@ -18,10 +18,10 @@
 
   let set_selected_area () =
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
       ];
     match !selected_area with
     | None -> ()
@@ -72,24 +72,32 @@
           col = 3;
           id = "2_3";
           txt_in = "";
-          txt = ""
+          txt = "";
+          color = ""
       });
       msg  = "No Msg"
     }
 
   let selected_area_top_row_test () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
     ];
     let top_row =
       [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""}
+        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""}
       ]
     in
       {
@@ -100,17 +108,24 @@
 
   let selected_area_bottom_row_test () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
     ];
     let bottom_row =
       [
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
       ]
     in
       {
@@ -121,17 +136,24 @@
 
   let selected_area_left_col_test () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
     ];
     let left_col =
       [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""}
+        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}
       ]
     in
       {
@@ -142,17 +164,24 @@
 
   let selected_area_right_col_test () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
     ];
     let right_col =
       [
-        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-        SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
       ]
     in
       {
@@ -163,17 +192,24 @@
 
   let row_above_selected_area_test () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
     ];
     let row_above =
       [
-        SingleCell {row = 1; col = 3; id = "1_3"; txt_in = ""; txt = ""};
-        SingleCell {row = 1; col = 2; id = "1_2"; txt_in = ""; txt = ""}
+        SingleCell {row = 1; col = 3; id = "1_3"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 1; col = 2; id = "1_2"; txt_in = ""; txt = ""; color = ""}
       ]
     in
     let msg =
@@ -188,17 +224,24 @@
 
   let row_below_selected_area_test () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
     ];
     let row_below =
       [
-        SingleCell {row = 4; col = 3; id = "4_3"; txt_in = ""; txt = ""};
-        SingleCell {row = 4; col = 2; id = "4_2"; txt_in = ""; txt = ""}
+        SingleCell {row = 4; col = 3; id = "4_3"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 4; col = 2; id = "4_2"; txt_in = ""; txt = ""; color = ""}
       ]
     in
     let msg =
@@ -213,17 +256,24 @@
 
   let col_left_selected_area_test ( )=
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
     ];
     let col_left =
       [
-        SingleCell {row = 3; col = 1; id = "3_1"; txt_in = ""; txt = ""};
-        SingleCell {row = 2; col = 1; id = "2_1"; txt_in = ""; txt = ""}
+        SingleCell {row = 3; col = 1; id = "3_1"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 2; col = 1; id = "2_1"; txt_in = ""; txt = ""; color = ""}
       ]
     in
     let msg =
@@ -238,17 +288,24 @@
 
   let col_right_selected_area_test () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
     ];
     let col_right =
       [
-        SingleCell {row = 3; col = 4; id = "3_4"; txt_in = ""; txt = ""};
-        SingleCell {row = 2; col = 4; id = "2_4"; txt_in = ""; txt = ""}
+        SingleCell {row = 3; col = 4; id = "3_4"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 2; col = 4; id = "2_4"; txt_in = ""; txt = ""; color = ""}
       ]
     in
     let msg =
@@ -263,12 +320,26 @@
 
   let update_selected_area_test_1 () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
-    selected_area := Some [SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""}];
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
+    selected_area := Some [SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      }];
     let new_selected_area =
       Some [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""}
+        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}
       ];
     in
     update_selected_area_up ();
@@ -285,21 +356,28 @@
 
   let update_selected_area_test_2 () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
       ];
     let new_selected_area =
       Some [
-        SingleCell {row = 1; col = 3; id = "1_3"; txt_in = ""; txt = ""};
-        SingleCell {row = 1; col = 2; id = "1_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+        SingleCell {row = 1; col = 3; id = "1_3"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 1; col = 2; id = "1_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
       ];
     in
     update_selected_area_up ();
@@ -316,17 +394,24 @@
 
   let update_selected_area_test_3 () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 2;
+        col = 2;
+        id = "2_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""}
+      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
       ];
     let new_selected_area =
       Some [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""}
+        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""}
       ];
     in
     update_selected_area_up ();
@@ -343,11 +428,13 @@
 
   let shift_pressed_action_test () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell :=
+      Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""});
     shift_pressed_action ();
     let b1 = (!shift_pressed = true) in
     let b2 =
-      (!selected_area = Some [SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""}])
+      (!selected_area =
+       Some [SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}])
     in
     let msg =
       "b1 - " ^ (msg_of_bool b1) ^
@@ -362,11 +449,13 @@
   (* Test up arrow with just a single selected_cell and w/o shift pressed *)
   let up_arrow_action_test_1 () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell :=
+      Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""});
     shift_pressed := false;
     up_arrow_action ();
     let b1 =
-      (!selected_cell = Some (SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""}))
+      (!selected_cell =
+       Some (SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""}))
     in
     let b2 = (!selected_area    = None) in
     let msg = "b1 - " ^ (msg_of_bool b1) ^ ", b2 - " ^ (msg_of_bool b2) in
@@ -381,17 +470,19 @@ let up_arrow_action_test_2 () =
     ignore @@ %shell_print "\n***** BEGIN ***** up_arrow_action_test_2 ***** BEGIN *****";
     clear_all ();
     (**) print_selected_area ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell :=
+      Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""});
     shift_pressed := true;
     (**) print_selected_area ();
     up_arrow_action ();
     (**) print_selected_area ();
     let b1 =
-      (!selected_cell = Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""}))
+      (!selected_cell =
+       Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}))
     in
     let b2 = (!selected_area = Some [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""}
+        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}
       ])
     in
     (*let msg = "selected_area = " ^ (string_of_cell_list !selected_area) in*)
@@ -405,17 +496,31 @@ let up_arrow_action_test_2 () =
 (* Test up arrow TWICE with just a single selected_cell and with shift pressed *)
   let up_arrow_action_test_3 () =
     clear_all ();
-    selected_cell := Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""});
+    selected_cell := Some (SingleCell {
+        row = 3;
+        col = 2;
+        id = "3_2";
+        txt_in = "";
+        txt = "";
+        color = ""
+      });
     shift_pressed := true;
     up_arrow_action ();
     up_arrow_action ();
     let b1 =
-      (!selected_cell = Some (SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""}))
+      (!selected_cell = Some (SingleCell {
+           row = 2;
+           col = 2;
+           id = "2_2";
+           txt_in = "";
+           txt = "";
+           color = ""
+         }))
     in
     let b2 = (!selected_area = Some [
-        SingleCell {row = 1; col = 2; id = "1_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""};
+        SingleCell {row = 1; col = 2; id = "1_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
       ])
     in
     let msg =

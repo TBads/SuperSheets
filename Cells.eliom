@@ -1,6 +1,3 @@
-(* TODO: Need to make references to other cells work *)
-(* TODO: Need a tool bar with icon buttons           *)
-
 {server{
 
   (* Print a string to the server side shell -- for testing *)
@@ -81,7 +78,8 @@
       "  col    = " ^ (string_of_int sc.col) ^ ";" ^
       "  id     = " ^ sc.id ^ ";" ^
       "  txt_in = " ^ sc.txt_in ^ ";" ^
-      "  txt    = " ^ sc.txt ^
+      "  txt    = " ^ sc.txt ^ ";" ^
+      "  color  = " ^ sc.color ^
       "}"
     | MergedCell mc -> (
         "\n{" ^
@@ -91,7 +89,8 @@
         "  right_col   = " ^ (string_of_int mc.right_col) ^ ";" ^
         "  id          = " ^ mc.id ^ ";" ^
         "  txt_in      = " ^ mc.txt_in ^ ";" ^
-        "  txt         = " ^ mc.txt ^
+        "  txt         = " ^ mc.txt ^ ";" ^
+        "  color       = " ^ mc.color ^
         "}"
       )
 
@@ -181,11 +180,12 @@
       let c_num = col_of_id real_id in
       match cs * rs with
       | 1 -> Some (SingleCell {
-          row = r_num;
-          col = c_num;
-          id  = real_id;
+          row    = r_num;
+          col    = c_num;
+          id     = real_id;
           txt_in = ""; (* TODO *)
-          txt = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "")
+          txt    = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "");
+          color  = Js.to_string (c##style##backgroundColor)
         })
       | _ -> Some (MergedCell {
           top_row    = r_num;
@@ -194,7 +194,8 @@
           right_col  = c_num + cs - 1;
           id         = real_id;
           txt_in     = ""; (* TODO *)
-          txt        = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "")
+          txt        = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "");
+          color      = Js.to_string (c##style##backgroundColor)
         })
     with _ -> None (* TODO: Log/Handle specific errors here *)
 
@@ -282,7 +283,7 @@
     in
     Array.iter (fun (r, c) -> store_merged_cell (r, c) cell_location) ids
 
-  let store_fresh_merged_cell ~top_row ~left_col ~width ~height txt =
+  let store_fresh_merged_cell ~top_row ~left_col ~width ~height ~color txt =
     let bot_row = top_row + height - 1 in
     let right_col = left_col + width - 1 in
     store_cell (top_row, left_col) (MergedCell {
@@ -292,8 +293,9 @@
         right_col  = right_col;
         id         = id_of_key (top_row) (left_col);
         txt_in     = txt;
-        txt        = Formulas.eval_string txt
-  })
+        txt        = Formulas.eval_string txt;
+        color      = color
+    })
 
   (* Update the text fields in a cell residing in h *)
   let update_cell_in_h (key : int * int) (txt : string) =
@@ -307,7 +309,8 @@
             col    = sc.row;
             id     = sc.id;
             txt_in = txt;
-            txt    = Formulas.eval_string txt
+            txt    = Formulas.eval_string txt;
+            color  = sc.color
           }
         | MergedCell mc -> MergedCell {
             top_row    = mc.top_row;
@@ -316,7 +319,8 @@
             right_col  = mc.right_col;
             id         = mc.id;
             txt_in     = txt;
-            txt        = Formulas.eval_string txt
+            txt        = Formulas.eval_string txt;
+            color      = mc.color
           }
       in
       Hashtbl.replace h key new_cell
@@ -327,7 +331,47 @@
           col    = snd key;
           id     = id_of_key (fst key) (snd key);
           txt_in = txt;
-          txt    = Formulas.eval_string txt
+          txt    = Formulas.eval_string txt;
+          color  = cell_background_color (* TODO: should get from DOM *)
+      })
+    )
+
+  (* Update the color field in a cell residing in h *)
+  let update_cell_color_in_h (key : int * int) (new_color : string) =
+    if Hashtbl.mem h key
+    then (
+      let old_cell = Hashtbl.find h key in
+      let new_cell =
+        match old_cell with
+        | SingleCell sc -> SingleCell {
+            row    = sc.row;
+            col    = sc.row;
+            id     = sc.id;
+            txt_in = sc.txt_in;
+            txt    = sc.txt;
+            color  = new_color
+          }
+        | MergedCell mc -> MergedCell {
+            top_row    = mc.top_row;
+            bottom_row = mc.bottom_row;
+            left_col   = mc.left_col;
+            right_col  = mc.right_col;
+            id         = mc.id;
+            txt_in     = mc.txt_in;
+            txt        = mc.txt;
+            color      = new_color
+          }
+      in
+      Hashtbl.replace h key new_cell
+    )
+    else (
+      store_cell key (SingleCell {
+          row    = fst key;
+          col    = snd key;
+          id     = id_of_key (fst key) (snd key);
+          txt_in = "";
+          txt    = "";
+          color  = new_color
       })
     )
 
@@ -341,7 +385,8 @@
            "\"col\" : " ^ (string_of_int sc.col) ^ "," ^
            "\"id\" : \"" ^ sc.id ^ "\"," ^
            "\"txt_in\" : \"" ^ sc.txt_in ^ "\"," ^
-           "\"txt\" : \"" ^ sc.txt ^ "\"" ^
+           "\"txt\" : \"" ^ sc.txt ^ "\"," ^
+           "\"color\" : \"" ^ sc.color ^ "\"" ^
          "}")
      | MergedCell mc ->
          "\"MergedCell\" : {" ^
@@ -351,7 +396,8 @@
           "\"right_col\" : " ^ (string_of_int mc.right_col) ^ "," ^
           "\"id\" : \"" ^ mc.id ^ "\"," ^
           "\"txt_in\" : \"" ^ mc.txt_in ^ "\"," ^
-          "\"txt\" : \"" ^ mc.txt ^ "\"" ^
+          "\"txt\" : \"" ^ mc.txt ^ "\"," ^
+          "\"color\" : \"" ^ mc.color ^ "\"" ^
         "}"
 
   let cell_of_json ((s, j) : string * Yojson.Basic.json) =
@@ -362,7 +408,8 @@
         col    = to_int @@ member "col" j;
         id     = to_string @@ member "id" j;
         txt_in = to_string @@ member "txt_in" j;
-        txt    = to_string @@ member "txt" j
+        txt    = to_string @@ member "txt" j;
+        color  = to_string @@ member "color" j
       }
     | "MergedCell" -> MergedCell {
         top_row    = to_int @@ member "top_row" j;
@@ -371,7 +418,8 @@
         right_col  = to_int @@ member "right_col" j;
         id         = to_string @@ member "id" j;
         txt_in     = to_string @@ member "txt_in" j;
-        txt        = to_string @@ member "txt" j
+        txt        = to_string @@ member "txt" j;
+        color      = to_string @@ member "color" j
       }
     | _ -> failwith "Error: Received bad json!"
 
@@ -682,7 +730,14 @@
               new_td##ondblclick <- dbl_click_handler new_td;
               new_td##id <- old_td##id;
               if blank_cell
-              then store_fresh_merged_cell ~top_row:trn ~left_col:lcn ~width ~height ""
+              then
+                store_fresh_merged_cell
+                  ~top_row:trn
+                  ~left_col:lcn
+                  ~width
+                  ~height
+                  ~color:cell_background_color
+                  ""
               else ();
               replaceChild tr new_td old_td;
               selected_cell := None;
@@ -1435,11 +1490,54 @@
         | _ -> (); Js._true
       )
 
+  (* Colorpicker *)
+  let color_selected_area color =
+    match !selected_area with
+    | None -> ()
+    | Some sa ->
+        List.iter (fun c ->
+          try (
+            let td = getElementById (id_of_cell c) in
+            td##style##backgroundColor <- Js.string color;
+            update_cell_color_in_h (key_of_id @@ Js.to_string td##id) color
+          )
+          with _ -> () (* TODO: Log error here *)
+        ) sa
+
+  let color_cells_btn  (clr_pkr : inputElement Js.t) =
+    let div = createDiv document in
+    let btn = createButton document in
+    (*btn##textContent <- Js.some @@ Js.string "Highlight";*)
+    btn##className <- Js.string "glyphicon glyphicon-tint";
+    btn##id <- Js.string "ColorPickerBtn";
+    div##id <- Js.string "ColorPickerBtnDiv";
+    btn##onmouseup <-
+      handler (fun _ -> color_selected_area (Js.to_string clr_pkr##value); Js._true);
+    appendChild div btn;
+    div
+
+  let color_picker () =
+    let inp =
+      createInput ~_type:(Js.string "color") ~name:(Js.string "ColorPicker") document
+    in
+    inp##id <- Js.string "ColorPicker";
+    inp
+
+  (* Wrap the color picker input in a div for proper spacing on the page *)
+  let color_picker_div cp =
+    let div = createDiv document in
+    div##id <- Js.string "ColorPickerDiv";
+    appendChild div cp;
+    div
+
   (* Toolbar with Buttons *)
   let toolbar () =
     let toolbar = createDiv document in
     toolbar##style##backgroundColor <- Js.string cell_background_color;
     toolbar##id <- Js.string "toolbar";
+    let cp = color_picker () in
+    appendChild toolbar (color_picker_div cp);
+    appendChild toolbar (color_cells_btn cp);
     toolbar
 
   (* Create a new & empty cell *)
@@ -1575,4 +1673,5 @@
     btn##textContent <- Js.some @@ Js.string "Print Hashtable";
     btn##onmouseup <- handler (fun _ -> print_h (); Js._true);
     appendChild document##body btn
+
 }}

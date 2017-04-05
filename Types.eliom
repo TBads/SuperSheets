@@ -18,7 +18,8 @@
     col    : int;
     id     : string;
     txt_in : string;
-    txt    : string
+    txt    : string;
+    color  : string
   }
 
   type merged_cell = {
@@ -28,7 +29,8 @@
     right_col  : int;
     id         : string;
     txt_in     : string;
-    txt        : string
+    txt        : string;
+    color      : string
   }
 
   type cell = SingleCell of single_cell | MergedCell of merged_cell

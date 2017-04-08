@@ -79,7 +79,11 @@
       "  id     = " ^ sc.id ^ ";" ^
       "  txt_in = " ^ sc.txt_in ^ ";" ^
       "  txt    = " ^ sc.txt ^ ";" ^
-      "  color  = " ^ sc.color ^
+      "  color  = " ^ sc.color ^ ";" ^
+      "  border_top  = " ^ sc.border_top ^ ";" ^
+      "  border_bottom  = " ^ sc.border_bottom ^ ";" ^
+      "  border_left  = " ^ sc.border_left ^ ";" ^
+      "  border_right  = " ^ sc.border_right ^
       "}"
     | MergedCell mc -> (
         "\n{" ^
@@ -90,7 +94,11 @@
         "  id          = " ^ mc.id ^ ";" ^
         "  txt_in      = " ^ mc.txt_in ^ ";" ^
         "  txt         = " ^ mc.txt ^ ";" ^
-        "  color       = " ^ mc.color ^
+        "  color       = " ^ mc.color ^ ";" ^
+        "  border_top  = " ^ mc.border_top ^ ";" ^
+        "  border_bottom  = " ^ mc.border_bottom ^ ";" ^
+        "  border_left  = " ^ mc.border_left ^ ";" ^
+        "  border_right  = " ^ mc.border_right ^
         "}"
       )
 
@@ -185,7 +193,11 @@
           id     = real_id;
           txt_in = ""; (* TODO *)
           txt    = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "");
-          color  = Js.to_string (c##style##backgroundColor)
+          color  = Js.to_string (c##style##backgroundColor);
+          border_top = Js.to_string (c##style##borderTop);
+          border_bottom = Js.to_string (c##style##borderBottom);
+          border_left = Js.to_string (c##style##borderLeft);
+          border_right = Js.to_string (c##style##borderRight)
         })
       | _ -> Some (MergedCell {
           top_row    = r_num;
@@ -195,7 +207,11 @@
           id         = real_id;
           txt_in     = ""; (* TODO *)
           txt        = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "");
-          color      = Js.to_string (c##style##backgroundColor)
+          color      = Js.to_string (c##style##backgroundColor);
+          border_top = Js.to_string (c##style##borderTop);
+          border_bottom = Js.to_string (c##style##borderBottom);
+          border_left = Js.to_string (c##style##borderLeft);
+          border_right = Js.to_string (c##style##borderRight)
         })
     with _ -> None (* TODO: Log/Handle specific errors here *)
 
@@ -283,7 +299,17 @@
     in
     Array.iter (fun (r, c) -> store_merged_cell (r, c) cell_location) ids
 
-  let store_fresh_merged_cell ~top_row ~left_col ~width ~height ~color txt =
+  let store_fresh_merged_cell
+    ~top_row
+    ~left_col
+    ~width
+    ~height
+    ~color
+    ~border_top
+    ~border_bottom
+    ~border_left
+    ~border_right
+    txt =
     let bot_row = top_row + height - 1 in
     let right_col = left_col + width - 1 in
     store_cell (top_row, left_col) (MergedCell {
@@ -294,7 +320,11 @@
         id         = id_of_key (top_row) (left_col);
         txt_in     = txt;
         txt        = Formulas.eval_string txt;
-        color      = color
+        color      = color;
+        border_top = border_top;
+        border_bottom = border_bottom;
+        border_left = border_left;
+        border_right = border_right
     })
 
   (* Update the text fields in a cell residing in h *)
@@ -310,7 +340,11 @@
             id     = sc.id;
             txt_in = txt;
             txt    = Formulas.eval_string txt;
-            color  = sc.color
+            color  = sc.color;
+            border_top = sc.border_top;
+            border_bottom = sc.border_bottom;
+            border_left = sc.border_left;
+            border_right = sc.border_right
           }
         | MergedCell mc -> MergedCell {
             top_row    = mc.top_row;
@@ -320,7 +354,11 @@
             id         = mc.id;
             txt_in     = txt;
             txt        = Formulas.eval_string txt;
-            color      = mc.color
+            color      = mc.color;
+            border_top = mc.border_top;
+            border_bottom = mc.border_bottom;
+            border_left = mc.border_left;
+            border_right = mc.border_right
           }
       in
       Hashtbl.replace h key new_cell
@@ -332,7 +370,11 @@
           id     = id_of_key (fst key) (snd key);
           txt_in = txt;
           txt    = Formulas.eval_string txt;
-          color  = cell_background_color (* TODO: should get from DOM *)
+          color  = cell_background_color; (* TODO: should get from DOM *)
+          border_top = ""; (* TODO: should get from DOM *)
+          border_bottom = ""; (* TODO: should get from DOM *)
+          border_left = ""; (* TODO: should get from DOM *)
+          border_right = "" (* TODO: should get from DOM *)
       })
     )
 
@@ -349,7 +391,11 @@
             id     = sc.id;
             txt_in = sc.txt_in;
             txt    = sc.txt;
-            color  = new_color
+            color  = new_color;
+            border_top = sc.border_top;
+            border_bottom = sc.border_bottom;
+            border_left = sc.border_left;
+            border_right = sc.border_right;
           }
         | MergedCell mc -> MergedCell {
             top_row    = mc.top_row;
@@ -359,7 +405,11 @@
             id         = mc.id;
             txt_in     = mc.txt_in;
             txt        = mc.txt;
-            color      = new_color
+            color      = new_color;
+            border_top = mc.border_top;
+            border_bottom = mc.border_bottom;
+            border_left = mc.border_left;
+            border_right = mc.border_right;
           }
       in
       Hashtbl.replace h key new_cell
@@ -371,7 +421,11 @@
           id     = id_of_key (fst key) (snd key);
           txt_in = "";
           txt    = "";
-          color  = new_color
+          color  = new_color;
+          border_top = "";
+          border_bottom = "";
+          border_left = "";
+          border_right = "";
       })
     )
 
@@ -386,7 +440,11 @@
            "\"id\" : \"" ^ sc.id ^ "\"," ^
            "\"txt_in\" : \"" ^ sc.txt_in ^ "\"," ^
            "\"txt\" : \"" ^ sc.txt ^ "\"," ^
-           "\"color\" : \"" ^ sc.color ^ "\"" ^
+           "\"color\" : \"" ^ sc.color ^ "\"," ^
+           "\"border_top\" : \"" ^ sc.border_top ^ "\"," ^
+           "\"border_bottom\" : \"" ^ sc.border_bottom ^ "\"," ^
+           "\"border_left\" : \"" ^ sc.border_left ^ "\"," ^
+           "\"border_right\" : \"" ^ sc.border_right ^ "\"" ^
          "}")
      | MergedCell mc ->
          "\"MergedCell\" : {" ^
@@ -397,7 +455,11 @@
           "\"id\" : \"" ^ mc.id ^ "\"," ^
           "\"txt_in\" : \"" ^ mc.txt_in ^ "\"," ^
           "\"txt\" : \"" ^ mc.txt ^ "\"," ^
-          "\"color\" : \"" ^ mc.color ^ "\"" ^
+          "\"color\" : \"" ^ mc.color ^ "\"," ^
+          "\"border_top\" : \"" ^ mc.border_top ^ "\"," ^
+          "\"border_bottom\" : \"" ^ mc.border_bottom ^ "\"," ^
+          "\"border_left\" : \"" ^ mc.border_left ^ "\"," ^
+          "\"border_right\" : \"" ^ mc.border_right ^ "\"" ^
         "}"
 
   let cell_of_json ((s, j) : string * Yojson.Basic.json) =
@@ -409,7 +471,11 @@
         id     = to_string @@ member "id" j;
         txt_in = to_string @@ member "txt_in" j;
         txt    = to_string @@ member "txt" j;
-        color  = to_string @@ member "color" j
+        color  = to_string @@ member "color" j;
+        border_top = to_string @@ member "border_top" j;
+        border_bottom = to_string @@ member "border_bottom" j;
+        border_left = to_string @@ member "border_left" j;
+        border_right = to_string @@ member "border_right" j;
       }
     | "MergedCell" -> MergedCell {
         top_row    = to_int @@ member "top_row" j;
@@ -419,7 +485,11 @@
         id         = to_string @@ member "id" j;
         txt_in     = to_string @@ member "txt_in" j;
         txt        = to_string @@ member "txt" j;
-        color      = to_string @@ member "color" j
+        color      = to_string @@ member "color" j;
+        border_top = to_string @@ member "border_top" j;
+        border_bottom = to_string @@ member "border_bottom" j;
+        border_left = to_string @@ member "border_left" j;
+        border_right = to_string @@ member "border_right" j;
       }
     | _ -> failwith "Error: Received bad json!"
 
@@ -653,17 +723,13 @@
       handler (fun (e : keyboardEvent Js.t) ->
         if e##keyCode = 27 (* Escape Key Code *)
         then (
-          ignore @@ %shell_print "\ne##keyCode = 27";
           update_cell_in_h (key_of_id @@ Js.to_string td##id) (Js.to_string txt##value);
-          ignore @@ %shell_print "\nPoint1";
           removeChild document##body div;
-          ignore @@ %shell_print "\nPoint2";
           td##textContent <-
             Js.to_string txt##value
             |> Formulas.eval_string
             |> Js.string
             |> Js.some; (*txt##value;*)
-          ignore @@ %shell_print "\nPoint3"
         )
         else ();
         Js._true
@@ -737,6 +803,10 @@
                   ~width
                   ~height
                   ~color:cell_background_color
+                  ~border_top:""
+                  ~border_bottom:""
+                  ~border_left:""
+                  ~border_right:""
                   ""
               else ();
               replaceChild tr new_td old_td;
@@ -854,42 +924,6 @@
     let body = document##body in
     appendChild body btn
 
-  let highlight_cells cl =
-    List.iter (fun c ->
-        try
-          let td = getElementById (id_of_cell c) in
-          td##style##backgroundColor <- Js.string "yellow"
-        with _ -> () (* TODO: Log error here *)
-      ) cl
-
-  let unhighlight_cells cl =
-    List.iter (fun c ->
-        try
-          let td = getElementById (id_of_cell c) in
-          td##style##backgroundColor <- Js.string cell_background_color
-        with _ -> () (* TODO: Log error here *)
-      ) cl
-
-  let highlight_selected_area () =
-    match !selected_area with
-    | None    -> ()
-    | Some sa -> highlight_cells sa
-
-  let unhighlight_selected_area () =
-    match !selected_area with
-    | None    -> ()
-    | Some sa -> unhighlight_cells sa
-
-  let shift_release_action () =
-    match !selected_area with
-    | None -> ()
-    | Some sa -> (
-        shift_pressed := false;
-        if List.length sa = 1
-        then unhighlight_selected_area ()
-        else ()
-      )
-
   (* Get the list of cells that makeup the top row of the the currently selected area *)
   let selected_area_top_row () =
     match !selected_area with
@@ -985,6 +1019,159 @@
           | SingleCell sc -> sc.col = right_col_num
           | MergedCell mc -> mc.right_col = right_col_num
       ) sa
+
+  let un_border_top_row () =
+    try (
+      match selected_area_top_row () with
+      | [] -> ()
+      | l  ->
+          List.iter (fun c ->
+            let cl = getElementById (id_of_cell c) in
+            cl##style##borderTop <- Js.string "1px solid black"
+          ) l
+    )
+    with
+    | _ -> () (* TODO: Log Error *)
+
+  let un_border_bottom_row () =
+    try (
+      match selected_area_bottom_row () with
+      | [] -> ()
+      | l  ->
+          List.iter (fun c ->
+            let cl = getElementById (id_of_cell c) in
+            cl##style##borderBottom <- Js.string "1px solid black"
+          ) l
+    )
+    with
+    | _ -> () (* TODO: Log Error *)
+
+  let un_border_left_col () =
+    try (
+      match selected_area_left_col () with
+      | [] -> ()
+      | l  ->
+          List.iter (fun c ->
+            let cl = getElementById (id_of_cell c) in
+            cl##style##borderLeft <- Js.string "1px solid black"
+          ) l
+    )
+    with
+    | _ -> () (* TODO: Log Error *)
+
+  let un_border_right_col () =
+    try (
+      match selected_area_right_col () with
+      | [] -> ()
+      | l  ->
+          List.iter (fun c ->
+            let cl = getElementById (id_of_cell c) in
+            cl##style##borderRight <- Js.string "1px solid black"
+          ) l
+    )
+    with
+    | _ -> () (* TODO: Log Error *)
+
+  let un_border_all () =
+    un_border_top_row ();
+    un_border_bottom_row ();
+    un_border_left_col ();
+    un_border_right_col ()
+
+  (* TODO: In addition to highlighting cells, add a thick border around selected_cells *)
+  let border_top_row () =
+    try (
+      match selected_area_top_row () with
+      | [] -> ()
+      | l  -> List.iter (fun c ->
+          let cl = getElementById (id_of_cell c) in
+          cl##style##borderTop <- Js.string "2px solid black") l
+    )
+    with
+    | _ -> () (* TODO: Log Error *)
+
+  let border_bottom_row () =
+    try (
+      match selected_area_bottom_row () with
+      | [] -> ()
+      | l  ->
+          List.iter (fun c ->
+            let cl = getElementById (id_of_cell c) in
+            cl##style##borderBottom <- Js.string "2px solid black"
+          ) l
+    )
+    with
+    | _ -> () (* TODO: Log Error *)
+
+  let border_left_col () =
+    try (
+      match selected_area_left_col () with
+      | [] -> ()
+      | l  ->
+          List.iter (fun c ->
+            let cl = getElementById (id_of_cell c) in
+            cl##style##borderLeft <- Js.string "2px solid black"
+          ) l
+    )
+    with
+    | _ -> () (* TODO: Log Error *)
+
+  let border_right_col () =
+    try (
+      match selected_area_right_col () with
+      | [] -> ()
+      | l  ->
+          List.iter (fun c ->
+            let cl = getElementById (id_of_cell c) in
+            cl##style##borderRight <- Js.string "2px solid black"
+          ) l
+    )
+    with
+    | _ -> () (* TODO: Log Error *)
+
+  let border_all () =
+    border_top_row ();
+    border_bottom_row ();
+    border_left_col ();
+    border_right_col ()
+
+  let highlight_cells cl =
+    List.iter (fun c ->
+        try
+          let td = getElementById (id_of_cell c) in
+          td##style##backgroundColor <- Js.string "yellow"
+        with _ -> () (* TODO: Log error here *)
+      ) cl
+
+  (* TODO move most of this to a new function un_border_cells *)
+  let unhighlight_cells cl =
+    List.iter (fun c ->
+        try
+          let td = getElementById (id_of_cell c) in
+          (* TODO Replace the background color if the cell is in h, not always the default color *)
+          td##style##backgroundColor <- Js.string cell_background_color
+        with _ -> () (* TODO: Log error here *)
+      ) cl
+
+  let highlight_selected_area () =
+    match !selected_area with
+    | None    -> ()
+    | Some sa -> highlight_cells sa
+
+  let unhighlight_selected_area () =
+    match !selected_area with
+    | None    -> ()
+    | Some sa -> unhighlight_cells sa
+
+  let shift_release_action () =
+    match !selected_area with
+    | None -> ()
+    | Some sa -> (
+        shift_pressed := false;
+        if List.length sa = 1
+        then unhighlight_selected_area ()
+        else ()
+      )
 
   let rec drop_nones ?(acc = []) (l : 'a option list) =
     match l with
@@ -1182,146 +1369,6 @@
       )
     | _, _ -> () (* This should not happen, log an error here *)
 
-  (* Fill in the missing area after cells have been highlighted              *)
-  (* Ex. If a merged cell covers 2,2 2,3 3,2 & 3,3, then the user selects 4,2,                 *)
-  (*     presses shift + up, the merged cell and previously selected cell will be highlighted, *)
-  (*  but 4,3 will need to be highlighted also                                                 *)
-  let highlight_missing_area () =
-    (* get the top row, bottom row, left col and right col of the highlighted area *)
-    match !selected_area with
-    | Some sa -> (
-        let top_row_num =
-          List.fold_left (fun acc c -> if t_row c < acc then t_row c else acc) max_int sa
-        in
-        let bottom_row_num =
-          List.fold_left (fun acc c -> if b_row c > acc then b_row c else acc) 0 sa
-        in
-        let left_col_num =
-          List.fold_left (fun acc c -> if l_col c < acc then l_col c else acc) max_int sa
-        in
-        let right_col_num =
-          List.fold_left (fun acc c -> if r_col c > acc then r_col c else acc) 0 sa
-        in
-        (* Get a list of all single cells that cover this area *)
-        (* Note: if there is a merged cell in the selected area, then some of these may not exist *)
-        let row_nums =
-        Array.create (bottom_row_num - top_row_num + 1) 0
-        |> (Array.mapi (fun i _ -> i + top_row_num))
-        in
-        let col_nums =
-          Array.create (right_col_num - left_col_num + 1) 0
-          |> (Array.mapi (fun i _ -> i + left_col_num))
-        in
-        let cell_ids =
-          Array.map (fun r -> Array.fold_left (fun acc c -> (r, c) :: acc) [] col_nums) row_nums
-          |> Array.to_list
-          |> List.flatten
-          |> List.map (fun (r, c) -> id_of_key r c)
-        in
-        List.iter (fun id ->
-          try
-            let td = getElementById id in
-            td##style##backgroundColor <- Js.string "yellow"
-          with _ -> () (* TODO: Log error here *)
-        ) cell_ids
-      )
-    | None -> ()
-
-  let highlight_cells_up () =
-    match !selected_cell with
-    | Some sc -> (
-        match selected_area_top_row () with
-        | [] -> ()
-        | hd :: tl -> (
-            if (t_row hd = t_row sc && selected_area_nrows () = 1) || t_row hd < t_row sc
-            then begin
-              List.iter (fun c ->
-                let td = getElementById (id_of_cell c) in
-                td##style##backgroundColor <- Js.string "yellow"
-                ) (row_above_selected_area ());
-              highlight_missing_area () end
-            else
-              List.iter (fun c ->
-                let td = getElementById (id_of_cell c) in
-                td##style##backgroundColor <- Js.string cell_background_color
-                ) (selected_area_bottom_row ())
-          )
-      )
-    | None -> ()
-
-  let highlight_cells_down () =
-    match !selected_cell with
-    | Some sc -> (
-        match selected_area_bottom_row () with
-        | [] -> ()
-        | hd :: tl -> (
-          if (b_row hd = b_row sc && selected_area_nrows () = 1) || b_row sc < b_row hd
-          then
-            List.iter (fun c ->
-              let td = getElementById (id_of_cell c) in
-              td##style##backgroundColor <- Js.string "yellow"
-              ) (row_below_selected_area ())
-          else
-            List.iter (fun c ->
-                let td = getElementById (id_of_cell c) in
-                td##style##backgroundColor <- Js.string cell_background_color
-            ) (selected_area_top_row ())
-          )
-      )
-    | None -> ()
-
-  let highlight_cells_left () =
-    match !selected_cell with
-    | Some sc -> (
-        match selected_area_left_col () with
-        | [] -> ()
-        | hd :: tl -> (
-            if (l_col hd = l_col sc && selected_area_ncols () = 1) || l_col hd < l_col sc
-            then
-              List.iter (fun c ->
-                  let td = getElementById (id_of_cell c) in
-                  td##style##backgroundColor <- Js.string "yellow"
-              ) (col_left_selected_area ())
-            else
-              List.iter (fun c ->
-                  let td = getElementById (id_of_cell c) in
-                  td##style##backgroundColor <- Js.string cell_background_color
-                ) (selected_area_right_col ())
-          )
-      )
-    | None -> ()
-
-  let highlight_cells_right () =
-    match !selected_cell with
-    | Some sc -> (
-        match selected_area_right_col () with
-        | [] -> ()
-        | hd :: tl -> (
-            if (r_col hd = r_col sc && selected_area_ncols () = 1) || r_col sc < r_col hd
-            then
-              List.iter (fun c ->
-                  let td = getElementById (id_of_cell c) in
-                  td##style##backgroundColor <- Js.string "yellow"
-              ) (col_right_selected_area ())
-            else
-              List.iter (fun c ->
-                  let td = getElementById (id_of_cell c) in
-                  td##style##backgroundColor <- Js.string cell_background_color
-              ) (selected_area_left_col ())
-          )
-      )
-    | None -> ()
-
-  let shift_and_arrow_handler () =
-    handler (fun key_down ->
-        match key_down##keyCode with
-        | 38 -> highlight_cells_up (); Js._true
-        | 40 -> highlight_cells_down (); Js._true
-        | 37 -> highlight_cells_left (); Js._true
-        | 39 -> highlight_cells_right (); Js._true
-        | _ -> Js._true
-      )
-
   (* When the user presses shift                                   *)
   (*  (1) register shift_pressed as true                           *)
   (*  (2) highlight the currently selected cell                    *)
@@ -1392,6 +1439,7 @@
   let up_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
+        un_border_all ();
         unhighlight_selected_area ();
         selected_area := None;
         match up_cell () with
@@ -1404,8 +1452,10 @@
             uc##style##border <- Js.string "3px solid black";
       )
     | Some sel_c, true -> (
+        un_border_all (); (* TODO: poor solution for now *)
         update_selected_area_up ();
-        highlight_selected_area ()
+        highlight_selected_area ();
+        border_all () (* TODO: poor solution for now *)
       )
     | None, _ -> () (* Note: This case should never happen *)
 
@@ -1413,6 +1463,7 @@
   let down_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
+        un_border_all ();
         unhighlight_selected_area ();
         selected_area := None;
         match down_cell () with
@@ -1425,8 +1476,10 @@
           dc##style##border <- Js.string "3px solid black"
       )
     | Some sel_c, true -> (
+        un_border_all ();
         update_selected_area_down ();
-        highlight_selected_area ()
+        highlight_selected_area ();
+        border_all ()
       )
     | None, _ -> () (* Note: This case should never happen *)
 
@@ -1434,6 +1487,7 @@
   let left_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
+        un_border_all ();
         unhighlight_selected_area ();
         selected_area := None;
         match left_cell () with
@@ -1446,8 +1500,10 @@
           lc##style##border <- Js.string "3px solid black"
       )
     | Some sel_c, true -> (
+        un_border_all ();
         update_selected_area_left ();
         highlight_selected_area ();
+        border_all ()
       )
     | None, _ -> () (* Note: This case should never happen *)
 
@@ -1455,6 +1511,7 @@
   let right_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
+        un_border_all ();
         unhighlight_selected_area ();
         selected_area := None;
         match right_cell () with
@@ -1467,8 +1524,10 @@
           rc##style##border <- Js.string "3px solid black"
       )
     | Some sel_c, true -> (
+        un_border_all ();
         update_selected_area_right ();
-        highlight_selected_area ()
+        highlight_selected_area ();
+        border_all ()
       )
     | None, _ -> () (* Note: This case should never happen *)
 
@@ -1492,9 +1551,16 @@
 
   (* Colorpicker *)
   let color_selected_area color =
-    match !selected_area with
-    | None -> ()
-    | Some sa ->
+    match !selected_cell, !selected_area with
+    | Some sc, None -> (
+        try (
+          let td = getElementById (id_of_cell sc) in
+          td##style##backgroundColor <- Js.string color;
+          update_cell_color_in_h (key_of_id @@ Js.to_string td##id) color
+        )
+        with _ -> () (* TODO: Log error here *)
+      )
+    | _, Some sa ->
         List.iter (fun c ->
           try (
             let td = getElementById (id_of_cell c) in
@@ -1503,6 +1569,7 @@
           )
           with _ -> () (* TODO: Log error here *)
         ) sa
+    | None, None -> ()
 
   let color_cells_btn  (clr_pkr : inputElement Js.t) =
     let div = createDiv document in

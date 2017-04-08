@@ -19,7 +19,11 @@
     id     : string;
     txt_in : string;
     txt    : string;
-    color  : string
+    color  : string;
+    border_top : string;
+    border_bottom : string;
+    border_left : string;
+    border_right : string
   }
 
   type merged_cell = {
@@ -30,7 +34,11 @@
     id         : string;
     txt_in     : string;
     txt        : string;
-    color      : string
+    color      : string;
+    border_top : string;
+    border_bottom : string;
+    border_left : string;
+    border_right : string
   }
 
   type cell = SingleCell of single_cell | MergedCell of merged_cell

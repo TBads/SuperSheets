@@ -18,10 +18,26 @@
 
   let set_selected_area () =
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ];
     match !selected_area with
     | None -> ()
@@ -68,12 +84,9 @@
     {
       name = "cell_of_id_test";
       pass = (cell_of_id "2_3") = Some (SingleCell {
-          row = 2;
-          col = 3;
-          id = "2_3";
-          txt_in = "";
-          txt = "";
-          color = ""
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
       msg  = "No Msg"
     }
@@ -81,23 +94,44 @@
   let selected_area_top_row_test () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
     ];
     let top_row =
       [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ]
     in
       {
@@ -109,23 +143,44 @@
   let selected_area_bottom_row_test () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
     ];
     let bottom_row =
       [
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ]
     in
       {
@@ -137,23 +192,44 @@
   let selected_area_left_col_test () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
     ];
     let left_col =
       [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ]
     in
       {
@@ -165,23 +241,44 @@
   let selected_area_right_col_test () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
     ];
     let right_col =
       [
-        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ]
     in
       {
@@ -193,23 +290,44 @@
   let row_above_selected_area_test () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
     ];
     let row_above =
       [
-        SingleCell {row = 1; col = 3; id = "1_3"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 1; col = 2; id = "1_2"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 1; col = 3; id = "1_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 1; col = 2; id = "1_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ]
     in
     let msg =
@@ -225,23 +343,44 @@
   let row_below_selected_area_test () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
     ];
     let row_below =
       [
-        SingleCell {row = 4; col = 3; id = "4_3"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 4; col = 2; id = "4_2"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 4; col = 3; id = "4_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 4; col = 2; id = "4_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ]
     in
     let msg =
@@ -257,23 +396,44 @@
   let col_left_selected_area_test ( )=
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
     ];
     let col_left =
       [
-        SingleCell {row = 3; col = 1; id = "3_1"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 2; col = 1; id = "2_1"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 3; col = 1; id = "3_1";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 1; id = "2_1";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ]
     in
     let msg =
@@ -289,23 +449,44 @@
   let col_right_selected_area_test () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
     ];
     let col_right =
       [
-        SingleCell {row = 3; col = 4; id = "3_4"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 2; col = 4; id = "2_4"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 3; col = 4; id = "3_4";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 4; id = "2_4";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ]
     in
     let msg =
@@ -321,25 +502,27 @@
   let update_selected_area_test_1 () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       }];
     let new_selected_area =
       Some [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ];
     in
     update_selected_area_up ();
@@ -357,27 +540,64 @@
   let update_selected_area_test_2 () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 3;
-        col = 2;
-        id = "3_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 3; col = 2; id = "3_2";
+        txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ];
     let new_selected_area =
       Some [
-        SingleCell {row = 1; col = 3; id = "1_3"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 1; col = 2; id = "1_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 1; col = 3; id = "1_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 1; col = 2; id = "1_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ];
     in
     update_selected_area_up ();
@@ -395,23 +615,44 @@
   let update_selected_area_test_3 () =
     clear_all ();
     selected_cell := Some (SingleCell {
-        row = 2;
-        col = 2;
-        id = "2_2";
-        txt_in = "";
-        txt = "";
-        color = ""
+        row = 2; col = 2; id = "2_2";
+        txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     selected_area := Some [
-      SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
-      SingleCell {row = 3; col = 3; id = "3_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 3; id = "3_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ];
     let new_selected_area =
       Some [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 2; col = 3; id = "2_3"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 3; id = "2_3";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ];
     in
     update_selected_area_up ();
@@ -429,12 +670,20 @@
   let shift_pressed_action_test () =
     clear_all ();
     selected_cell :=
-      Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""});
+      Some (SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        });
     shift_pressed_action ();
     let b1 = (!shift_pressed = true) in
     let b2 =
       (!selected_area =
-       Some [SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}])
+       Some [SingleCell {
+           row = 3; col = 2; id = "3_2";
+           txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+         }])
     in
     let msg =
       "b1 - " ^ (msg_of_bool b1) ^
@@ -450,12 +699,20 @@
   let up_arrow_action_test_1 () =
     clear_all ();
     selected_cell :=
-      Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""});
+      Some (SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        });
     shift_pressed := false;
     up_arrow_action ();
     let b1 =
       (!selected_cell =
-       Some (SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""}))
+       Some (SingleCell {
+           row = 2; col = 2; id = "2_2";
+           txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+         }))
     in
     let b2 = (!selected_area    = None) in
     let msg = "b1 - " ^ (msg_of_bool b1) ^ ", b2 - " ^ (msg_of_bool b2) in
@@ -471,18 +728,34 @@ let up_arrow_action_test_2 () =
     clear_all ();
     (**) print_selected_area ();
     selected_cell :=
-      Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""});
+      Some (SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        });
     shift_pressed := true;
     (**) print_selected_area ();
     up_arrow_action ();
     (**) print_selected_area ();
     let b1 =
       (!selected_cell =
-       Some (SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}))
+       Some (SingleCell {
+           row = 3; col = 2; id = "3_2";
+           txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+         }))
     in
     let b2 = (!selected_area = Some [
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""}
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        }
       ])
     in
     (*let msg = "selected_area = " ^ (string_of_cell_list !selected_area) in*)
@@ -502,7 +775,8 @@ let up_arrow_action_test_2 () =
         id = "3_2";
         txt_in = "";
         txt = "";
-        color = ""
+        color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
       });
     shift_pressed := true;
     up_arrow_action ();
@@ -514,13 +788,26 @@ let up_arrow_action_test_2 () =
            id = "2_2";
            txt_in = "";
            txt = "";
-           color = ""
+           color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
          }))
     in
     let b2 = (!selected_area = Some [
-        SingleCell {row = 1; col = 2; id = "1_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 2; col = 2; id = "2_2"; txt_in = ""; txt = ""; color = ""};
-        SingleCell {row = 3; col = 2; id = "3_2"; txt_in = ""; txt = ""; color = ""};
+        SingleCell {
+          row = 1; col = 2; id = "1_2";
+          txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 2; col = 2; id = "2_2";
+          txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
+        SingleCell {
+          row = 3; col = 2; id = "3_2";
+          txt_in = ""; txt = ""; color = "";
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        };
       ])
     in
     let msg =

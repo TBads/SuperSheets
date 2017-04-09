@@ -145,6 +145,11 @@
     | SingleCell sc -> sc.txt
     | MergedCell mc -> mc.txt
 
+  let color_of_cell (c : cell) =
+    match c with
+    | SingleCell sc -> sc.color
+    | MergedCell mc -> mc.color
+
   let key_of_cell (c : cell) =
     key_of_id @@ id_of_cell c
 
@@ -1025,9 +1030,12 @@
       match selected_area_top_row () with
       | [] -> ()
       | l  ->
-          List.iter (fun c ->
+        List.iter (fun c ->
+            (* Hide the cell then re-draw on the page b/c of rendering bug *)
             let cl = getElementById (id_of_cell c) in
-            cl##style##borderTop <- Js.string "1px solid black"
+            cl##style##display <- Js.string "none";
+            cl##style##borderTop <- Js.string "1px solid black";
+            cl##style##display <- Js.string "table-cell"
           ) l
     )
     with
@@ -1038,9 +1046,14 @@
       match selected_area_bottom_row () with
       | [] -> ()
       | l  ->
-          List.iter (fun c ->
+        List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
-            cl##style##borderBottom <- Js.string "1px solid black"
+            cl##style##display <- Js.string "none";
+            cl##style##borderBottom <- Js.string "1px solid black";
+            cl##style##borderBottomColor <- Js.string "black";
+            cl##style##borderBottomWidth <- Js.string "1px";
+            cl##style##borderBottomStyle <- Js.string "solid";
+            cl##style##display <- Js.string "table-cell"
           ) l
     )
     with
@@ -1053,7 +1066,9 @@
       | l  ->
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
-            cl##style##borderLeft <- Js.string "1px solid black"
+            cl##style##display <- Js.string "none";
+            cl##style##borderLeft <- Js.string "1px solid black";
+            cl##style##display <- Js.string "table-cell"
           ) l
     )
     with
@@ -1066,7 +1081,9 @@
       | l  ->
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
-            cl##style##borderRight <- Js.string "1px solid black"
+            cl##style##display <- Js.string "none";
+            cl##style##borderRight <- Js.string "1px solid black";
+            cl##style##display <- Js.string "table-cell"
           ) l
     )
     with
@@ -1078,14 +1095,16 @@
     un_border_left_col ();
     un_border_right_col ()
 
-  (* TODO: In addition to highlighting cells, add a thick border around selected_cells *)
   let border_top_row () =
     try (
       match selected_area_top_row () with
       | [] -> ()
       | l  -> List.iter (fun c ->
           let cl = getElementById (id_of_cell c) in
-          cl##style##borderTop <- Js.string "2px solid black") l
+          cl##style##display <- Js.string "none";
+          cl##style##borderTop <- Js.string "2px solid black";
+          cl##style##display <- Js.string "table-cell"
+        ) l
     )
     with
     | _ -> () (* TODO: Log Error *)
@@ -1097,7 +1116,12 @@
       | l  ->
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
-            cl##style##borderBottom <- Js.string "2px solid black"
+            cl##style##display <- Js.string "none";
+            cl##style##borderBottom <- Js.string "2px solid black";
+            cl##style##borderBottomColor <- Js.string "black";
+            cl##style##borderBottomWidth <- Js.string "2px";
+            cl##style##borderBottomStyle <- Js.string "solid";
+            cl##style##display <- Js.string "table-cell"
           ) l
     )
     with
@@ -1110,7 +1134,9 @@
       | l  ->
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
-            cl##style##borderLeft <- Js.string "2px solid black"
+            cl##style##display <- Js.string "none";
+            cl##style##borderLeft <- Js.string "2px solid black";
+            cl##style##display <- Js.string "table-cell"
           ) l
     )
     with
@@ -1123,7 +1149,9 @@
       | l  ->
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
-            cl##style##borderRight <- Js.string "2px solid black"
+            cl##style##display <- Js.string "none";
+            cl##style##borderRight <- Js.string "2px solid black";
+            cl##style##display <- Js.string "table-cell"
           ) l
     )
     with
@@ -1143,13 +1171,18 @@
         with _ -> () (* TODO: Log error here *)
       ) cl
 
-  (* TODO move most of this to a new function un_border_cells *)
   let unhighlight_cells cl =
     List.iter (fun c ->
-        try
+        try (
           let td = getElementById (id_of_cell c) in
-          (* TODO Replace the background color if the cell is in h, not always the default color *)
-          td##style##backgroundColor <- Js.string cell_background_color
+ (* TODO TODO TODO Replace background color if the cell is in h, not always default color *)
+          if Hashtbl.mem merged_h (key_of_id @@ id_of_cell c)
+          then (
+            let old_color = color_of_cell  @@ get_cell (key_of_id @@ id_of_cell c) in
+            td##style##backgroundColor <- Js.string old_color
+          )
+          else td##style##backgroundColor <- Js.string cell_background_color
+        )
         with _ -> () (* TODO: Log error here *)
       ) cl
 
@@ -1436,6 +1469,7 @@
   (* Actions for an up arrow (other arrow actions follow the same pattern):             *)
   (* If shift is not pressed: ove the selected_area to the cell above & update selected_cell *)
   (* If shift_pressed: Highlight the cells above selected_area & update selected_area         *)
+  (* TODO: Up arrow action does not aways re-draw the bottom border of the last cell correctly*)
   let up_arrow_action () =
     match !selected_cell, !shift_pressed with
     | Some sel_c, false -> (
@@ -1446,10 +1480,18 @@
         | None -> ()
         | Some up_c ->
             let sc = getElementById @@ id_of_cell sel_c in
-            sc##style##border <- Js.string "1px solid black";
+            sc##style##display <- Js.string "none";
+            sc##style##border <- Js.string "1px";
+            sc##style##borderColor <- Js.string "black";
+            sc##style##borderStyle <- Js.string "solid";
+            sc##style##display <- Js.string "table-cell";
             let uc = getElementById @@ id_of_cell up_c in
+            uc##style##display <- Js.string "none";
             selected_cell := (Some up_c);
-            uc##style##border <- Js.string "3px solid black";
+            uc##style##border <- Js.string "3px";
+            uc##style##borderColor <- Js.string "black";
+            uc##style##borderStyle <- Js.string "solid";
+            uc##style##display <- Js.string "table-cell"
       )
     | Some sel_c, true -> (
         un_border_all (); (* TODO: poor solution for now *)

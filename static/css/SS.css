@@ -126,3 +126,27 @@ a.caml_request_node {
 button#ColorPickerBtn.glyphicon.glyphicon-tint {
   font-size: 20px
 }
+
+#user_sheets_div {
+    border: 1px solid #634271;
+    border-radius: 4px;
+    margin: 70px auto auto auto;
+    width: 900px
+}
+
+#user_sheets_tbl_title {
+    background-color: #634271;
+    border: 1px solid #634271;
+    border-radius: 0px
+}
+
+#user_sheets_tbl {
+    font-size: 18px;
+}
+
+#single_sheet_btn {
+    background-color: white;
+    border: none;
+    color: #634271;
+    font-weight: bold;
+}

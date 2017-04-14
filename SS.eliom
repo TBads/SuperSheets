@@ -6,9 +6,10 @@
   open Eliom_parameter
 }}
 
+(* TODO: Need a service for users to load sheets and work on them individually *)
+
 open Types
 
-(* Use for communication only on the Main Trading page, i.e. msg_box, active_orders, etc... *)
 let user_info =
   Eliom_reference.Volatile.eref ~scope:Eliom_common.default_process_scope ~secure:true
     {
@@ -48,6 +49,9 @@ let login_verify_service =
 let user_page_service =
   Eliom_service.Http.service ~path:["my_sheets"] ~get_params:Eliom_parameter.unit ()
 
+let single_sheet_service =
+  Eliom_service.Http.post_coservice' ~post_params:(string "username" ** string "sheet_name") ()
+
 let test_button =
   div ~a:[a_class ["btn btn-default btn-lg"]; a_id "header_button"]
   [a test_service [pcdata "Unit Tests"] ()
@@ -83,6 +87,16 @@ let login_logout_button (u : user) =
   match u.verified with
   | Some true -> logout_button
   | _ -> login_button
+
+let single_sheet_button usr_name sht_name =
+  Eliom_content.Html5.F.post_form ~service:single_sheet_service ~port:Config.port
+  (
+    fun (username, sheet_name) ->
+      [string_input ~input_type:`Hidden ~name:username ~value:usr_name ();
+       string_input ~input_type:`Hidden ~name:sheet_name ~value:sht_name ();
+       button ~a:[a_id "single_sheet_btn"] ~button_type:`Submit [pcdata sht_name]
+      ]
+  )
 
 (* TODO Add a button to instert a button into the selected area *)
 
@@ -225,6 +239,48 @@ let login_form =
       ]
   )
 
+let user_sheets_table (u : user) =
+  let table_title =
+    h3 ~a:[a_class ["panel-title text-center"]; a_style "font-size: 25px"] [pcdata "Sheets"]
+  in
+  let t_head =
+    thead ~a:[a_style "font-size: 18px"]
+    [tr
+     [th ~a:[a_class ["text-center"]] [pcdata "Sheet Name"];
+      th ~a:[a_class ["text-center"]] [pcdata "Last Updated"]
+     ]
+    ]
+  in
+  (* TODO: Fetch the actual data with a sql query *)
+  let dummy_data =
+    [
+      tr [td [single_sheet_button "test_user_1" "Orders" ()];    td [pcdata "June 16th 3:15 pm"]];
+      tr [td [single_sheet_button "test_user_1" "Inventory" ()]; td [pcdata "July 19th 4:45 pm"]]
+    ]
+  in
+  div ~a:[a_class ["panel panel-primary"]; a_id "user_sheets_div"]
+  [div ~a:[a_class ["panel-heading text-center"]; a_id "user_sheets_tbl_title"] [table_title];
+   div ~a:[a_class ["panel-body text-center"]; a_id "user_sheets_tbl"]
+   [table ~a:[a_class ["table table-striped"]] ~thead:t_head dummy_data]
+  ]
+
+{client{
+  open Dom
+  open Dom_html
+
+  (* Stop the arrow keys from scrolling on the page *)
+  let no_scroll_handler =
+    handler (fun key_release ->
+        match List.mem key_release##keyCode [33; 34; 35; 36; 37; 38; 39; 40] with
+        | true -> (preventDefault key_release; Js._false)
+        | false -> Js._true
+      )
+
+  let stop_scrolling () =
+    document##onkeydown <- no_scroll_handler
+
+}}
+
 let () =
   SS_app.register
     ~service:main_service
@@ -234,6 +290,7 @@ let () =
      let _ = {unit{load_button ()}} in
      let _ = {unit{merge_area_button ()}} in
      let _ = {unit{print_h_button ()}} in
+     let _ = {unit{stop_scrolling ()}} in
      let user = Eliom_reference.Volatile.get user_info in
       Lwt.return
         (Eliom_tools.F.html
@@ -432,9 +489,7 @@ let () =
            ~other_head:[bootstrap_cdn_link]
            (body ~a:[a_class ["transparent"]]
            [header_navbar_skeleton user;
-            div ~a:[a_class ["container"; "margin_top_50px"; "padding_top_50px"]]
-            [h2 ~a:[a_style "margin-top: 50px"] [pcdata "TODO: List User Sheets here..."];
-            ]
+            user_sheets_table user
            ])))
 
 (* Verify the users login data and set the session data if the verification passes *)
@@ -456,4 +511,25 @@ let () =
         Lwt.return user_page_service
       )
       else (Lwt.return logout_service)
+    )
+
+(* Single Sheet Page Service - Where the user will work on the spreadsheets *)
+let () =
+  Eliom_registration.Html5.register
+    ~service:single_sheet_service
+    (fun () (username, sheet_name) ->
+      (* Kick off the thread *)
+      Lwt.return @@ Eliom_reference.Volatile.get user_info
+      >>= fun user ->
+      Lwt.return
+        (Eliom_tools.F.html
+           ~title:sheet_name
+           ~css:[["css"; "SS.css"]]
+           ~other_head:[bootstrap_cdn_link]
+           (body ~a:[a_class ["transparent"]]
+           [header_navbar_skeleton user;
+            h4 ~a:[a_style "margin-top: 100px"] [pcdata "TODO: Load the spreadsheet here..."]
+           ]
+           )
+        )
     )

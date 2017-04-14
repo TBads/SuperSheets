@@ -52,6 +52,9 @@ let user_page_service =
 let single_sheet_service =
   Eliom_service.Http.post_coservice' ~post_params:(string "username" ** string "sheet_name") ()
 
+let blank_sheet_service =
+  Eliom_service.App.service ~path:["blank_sheet"] ~get_params:Eliom_parameter.unit ()
+
 let test_button =
   div ~a:[a_class ["btn btn-default btn-lg"]; a_id "header_button"]
   [a test_service [pcdata "Unit Tests"] ()
@@ -97,6 +100,11 @@ let single_sheet_button usr_name sht_name =
        button ~a:[a_id "single_sheet_btn"] ~button_type:`Submit [pcdata sht_name]
       ]
   )
+
+let blank_sheet_button =
+  div ~a:[a_class ["btn btn-info btn-lg"]; a_id "blank_sheet_btn_div"]
+  [a blank_sheet_service [pcdata "Blank Sheet"] ()
+  ]
 
 (* TODO Add a button to instert a button into the selected area *)
 
@@ -487,10 +495,14 @@ let () =
            ~title:"My Sheets"
            ~css:[["css"; "SS.css"]]
            ~other_head:[bootstrap_cdn_link]
-           (body ~a:[a_class ["transparent"]]
-           [header_navbar_skeleton user;
-            user_sheets_table user
-           ])))
+           (body ~a:[a_class ["transparent"]; a_style "text-align: center"]
+            [header_navbar_skeleton user;
+             blank_sheet_button;
+             user_sheets_table user
+            ]
+           )
+        )
+    )
 
 (* Verify the users login data and set the session data if the verification passes *)
 let () =
@@ -529,6 +541,28 @@ let () =
            (body ~a:[a_class ["transparent"]]
            [header_navbar_skeleton user;
             h4 ~a:[a_style "margin-top: 100px"] [pcdata "TODO: Load the spreadsheet here..."]
+           ]
+           )
+        )
+    )
+
+(* Blank Sheet Page Service - Loads a blank spreadsheet *)
+let () =
+  SS_app.register
+    ~service:blank_sheet_service
+    (fun () () ->
+      let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ()}} in
+      let _ = {unit{stop_scrolling ()}} in
+      let user = Eliom_reference.Volatile.get user_info in
+      Lwt.return
+        (Eliom_tools.F.html
+           ~title:"Blank Sheet"
+           ~css:[["css"; "SS.css"]]
+           ~other_head:[bootstrap_cdn_link]
+           (body ~a:[a_class ["transparent"]]
+              [header_navbar_skeleton user;
+               (* Provide padding between the spreadsheet & navbar *)
+               div ~a:[a_style "margin-top: 70px"] []
            ]
            )
         )

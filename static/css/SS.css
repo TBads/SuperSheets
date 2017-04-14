@@ -130,7 +130,7 @@ button#ColorPickerBtn.glyphicon.glyphicon-tint {
 #user_sheets_div {
     border: 1px solid #634271;
     border-radius: 4px;
-    margin: 70px auto auto auto;
+    margin: 20px auto auto auto;
     width: 900px
 }
 
@@ -149,4 +149,15 @@ button#ColorPickerBtn.glyphicon.glyphicon-tint {
     border: none;
     color: #634271;
     font-weight: bold;
+}
+
+#blank_sheet_btn_div {
+    border-radius: 4px;
+    height: 50px;
+    width: 250px;
+    margin: 70px auto auto auto;
+}
+
+#blank_sheet_btn {
+
 }

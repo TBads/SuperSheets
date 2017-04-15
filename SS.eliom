@@ -294,7 +294,6 @@ let () =
     ~service:main_service
     (fun () () ->
      let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ()}} in
-     let _ = {unit{save_button ()}} in
      let _ = {unit{load_button ()}} in
      let _ = {unit{merge_area_button ()}} in
      let _ = {unit{print_h_button ()}} in

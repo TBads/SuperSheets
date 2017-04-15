@@ -923,11 +923,14 @@
     appendChild body btn
 
   let save_button () =
+    let div = createDiv document in
     let btn = createButton document in
-    btn##textContent <- Js.some @@ Js.string "Save";
+    btn##className <- Js.string "glyphicon glyphicon-floppy-disk";
+    btn##id <- Js.string "SaveBtn";
+    div##id <- Js.string "SaveBtnDiv";
     btn##onmouseup <- save_ss_handler;
-    let body = document##body in
-    appendChild body btn
+    appendChild div btn;
+    div
 
   (* Get the list of cells that makeup the top row of the the currently selected area *)
   let selected_area_top_row () =
@@ -1645,6 +1648,7 @@
     toolbar##style##backgroundColor <- Js.string cell_background_color;
     toolbar##id <- Js.string "toolbar";
     let cp = color_picker () in
+    appendChild toolbar (save_button ());
     appendChild toolbar (color_picker_div cp);
     appendChild toolbar (color_cells_btn cp);
     toolbar
@@ -1775,6 +1779,7 @@
     appendChild body btn
 
   let print_h () =
+    ignore @@ %shell_print "Hashtbl h = \n";
     Hashtbl.iter (fun k c -> ignore @@ %shell_print @@ string_of_cell c) h
 
   let print_h_button () =

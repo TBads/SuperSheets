@@ -1889,8 +1889,18 @@
       appendChild body tbl_div
     )
 
-(* TODO: Ther user should be able to select a single merged cell and click the merge button *)
-(* to un-merge the cell                                                                     *)
+
+    (* Load a table populated with data *)
+    let load_table_with_data ?username ~nrows ~ncols ss_string =
+      fresh_table ?username ~nrows:num_sheet_rows ~ncols:num_sheet_cols ();
+      let (kv_list : ((int * int) * cell) list) =
+        parse_ss_string ss_string |> List.map (fun c -> ((key_of_cell c), c))
+      in
+      replace_h kv_list;
+      Hashtbl.iter (fun (k : int * int) (v : cell) -> update_td k v) h
+
+  (* TODO: Ther user should be able to select a single merged cell and click the merge button *)
+  (* to un-merge the cell                                                                     *)
 
   let merge_selected_area () =
     match !selected_area with

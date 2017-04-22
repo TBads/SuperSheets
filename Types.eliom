@@ -4,7 +4,15 @@
     username : string option;
     email    : string option;
     verified : bool option
-  } deriving (Json)
+  }
+
+let user_info =
+  Eliom_reference.Volatile.eref ~scope:Eliom_common.default_session_scope ~secure:true
+    {
+      username = None;
+      email = None;
+      verified = None
+    }
 
 }}
 

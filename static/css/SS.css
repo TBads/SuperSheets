@@ -185,3 +185,115 @@ button#ColorPickerBtn.glyphicon.glyphicon-tint {
 #blank_sheet_btn {
 
 }
+
+#save_modal {
+    height: 265px;
+    width: 500px;
+    color: green;
+    border: 2px solid black;
+    display: block;
+    background-color: white;
+    z-index: 1;
+    position: fixed;
+    margin: auto;
+    border-radius: 5px;
+}
+
+#ModalBtn {
+  width: 45px;
+  height: 35px;
+  font-size: 20px;
+  background: none;
+  border: none;
+}
+
+#ModalBtnDiv {
+    width: 50px;
+    height: 40px;
+    display: inline-block;
+    float: left;
+    margin-top: 4px;
+    margin-left: 2px;
+    margin-right: 2px;
+    margin-bottom: auto;
+}
+
+#save_modal_title_div {
+    height: 50px;
+    width: 100%;
+    text-align: center;
+    background: whitesmoke;
+    color: black;
+    font-weight: bold;
+    padding-top: 15px;
+}
+
+#save_modal_name_div {
+    margin-top: 10px;
+}
+
+#save_modal_name_label {
+    width: 20%;
+    height: 35px;
+    float: left;
+    text-align: center;
+    color: black;
+    font-weight: bold;
+    padding-top: 5px;
+}
+
+#save_modal_name_input {
+    width: 78% !important;
+    float: left;
+}
+
+#save_modal_description_div {
+    margin-top: 50px;
+}
+
+#save_modal_description_label {
+    width: 20%;
+    height: 35px;
+    float: left;
+    text-align: center;
+    color: black;
+    font-weight: bold;
+    padding-top: 5px;
+}
+
+#save_modal_description_input {
+    width: 96% !important;
+    float: center;
+    height: 100px;
+    margin: auto;
+    text-align: center;
+}
+
+#CancelSaveBtn {
+    width: 75px;
+    height: 40px;
+    float: right;
+    margin: 10px;
+    font-weight: bold;
+}
+
+#CompleteSaveBtn {
+    width: 75px;
+    height: 40px;
+    float: right;
+    margin: 10px;
+    font-weight: bold;
+}
+
+#save_confirm_modal {
+    height: 265px;
+    width: 500px;
+    color: green;
+    border: 2px solid black;
+    display: block;
+    background-color: white;
+    z-index: 1;
+    position: fixed;
+    margin: auto;
+    border-radius: 5px;
+}

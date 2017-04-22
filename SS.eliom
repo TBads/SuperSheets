@@ -242,22 +242,29 @@ let user_sheets_table (u : user) =
   let t_head =
     thead ~a:[a_style "font-size: 18px"]
     [tr
-     [th ~a:[a_class ["text-center"]] [pcdata "Sheet Name"];
-      th ~a:[a_class ["text-center"]] [pcdata "Last Updated"]
+     [th ~a:[a_class ["text-center"]] [pcdata "Sheet Name"]
+     (*th ~a:[a_class ["text-center"]] [pcdata "Last Updated"]*)
      ]
     ]
   in
-  (* TODO: Fetch the actual data with a sql query *)
-  let dummy_data =
-    [
-      tr [td [single_sheet_button "test_user_1" "Orders" ()];    td [pcdata "June 16th 3:15 pm"]];
-      tr [td [single_sheet_button "test_user_1" "Inventory" ()]; td [pcdata "July 19th 4:45 pm"]]
-    ]
+  let sheet_names =
+    match u.username with
+    | None -> []
+    | Some s -> Db_funs.user_sheets s
+  in
+  let sheet_data =
+    match u.username with
+    | None   -> []
+    | Some s ->
+      List.map
+        (fun (sheet_name : string) -> tr [td [single_sheet_button s sheet_name ()]])
+        sheet_names
+  in
   in
   div ~a:[a_class ["panel panel-primary"]; a_id "user_sheets_div"]
   [div ~a:[a_class ["panel-heading text-center"]; a_id "user_sheets_tbl_title"] [table_title];
    div ~a:[a_class ["panel-body text-center"]; a_id "user_sheets_tbl"]
-   [table ~a:[a_class ["table table-striped"]] ~thead:t_head dummy_data]
+   [table ~a:[a_class ["table table-striped"]] ~thead:t_head sheet_data]
   ]
 
 {client{

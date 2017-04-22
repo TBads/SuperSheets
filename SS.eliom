@@ -260,7 +260,6 @@ let user_sheets_table (u : user) =
         (fun (sheet_name : string) -> tr [td [single_sheet_button s sheet_name ()]])
         sheet_names
   in
-  in
   div ~a:[a_class ["panel panel-primary"]; a_id "user_sheets_div"]
   [div ~a:[a_class ["panel-heading text-center"]; a_id "user_sheets_tbl_title"] [table_title];
    div ~a:[a_class ["panel-body text-center"]; a_id "user_sheets_tbl"]
@@ -532,14 +531,24 @@ let () =
       else (Lwt.return logout_service)
     )
 
-(* Single Sheet Page Service - Where the user will work on the spreadsheets *)
+(* Single Sheet Page Service - Where the user will work on a sheet *)
 let () =
-  Eliom_registration.Html5.register
+  SS_app.register
     ~service:single_sheet_service
+    (* TODO: Do I really need the username as an arg, or should that come from user_info? *)
     (fun () (username, sheet_name) ->
-      (* Kick off the thread *)
-      Lwt.return @@ Eliom_reference.Volatile.get user_info
-      >>= fun user ->
+      let user = Eliom_reference.Volatile.get user_info in
+      let un = user.username in
+      (* TODO: Make sure the user is verified *)
+      let sheet_data = Db_funs.sheet_data username sheet_name in
+      let _ = {unit{
+          load_table_with_data
+            ?username:%un
+            ~nrows:num_sheet_rows
+            ~ncols:num_sheet_cols
+            %sheet_data
+        }}
+        in
       Lwt.return
         (Eliom_tools.F.html
            ~title:sheet_name
@@ -547,7 +556,7 @@ let () =
            ~other_head:[bootstrap_cdn_link]
            (body ~a:[a_class ["transparent"]]
            [header_navbar_skeleton user;
-            h4 ~a:[a_style "margin-top: 100px"] [pcdata "TODO: Load the spreadsheet here..."]
+            h4 ~a:[a_style "margin-top: 100px"] [pcdata "TODO: A spreadsheet should load here..."]
            ]
            )
         )

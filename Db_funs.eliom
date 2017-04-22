@@ -251,3 +251,19 @@ let save_or_update_sheet ((username : string), (sheet_name : string), (sheet_dat
 {server{
   let save_or_update_sheet' = server_function Json.t<save_or_update_arg> save_or_update_sheet
 }}
+
+(* TODO: need to check if the user has been verified *)
+let user_sheets username =
+  let conn = connect user_db in
+  let esc s = Mysql.real_escape conn s in
+  match user_number username with
+  | None -> (disconnect conn; [])
+  | Some un -> (
+      let sql_stmt =
+        "SELECT sheet_name from SS.sheets " ^
+        "WHERE user_number = '" ^ (esc @@ string_of_int un) ^ "'"
+      in
+      let query_result = exec conn sql_stmt in
+      disconnect conn;
+      sll_of_res query_result |> List.map List.hd
+    )

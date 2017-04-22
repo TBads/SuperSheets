@@ -6,9 +6,9 @@
 PROJECT_NAME := SS
 
 # Source files for the server
-SERVER_FILES := Types.eliom Config.ml Cells.eliom UnitTests.eliom Db_funs.ml SS.eliom
+SERVER_FILES := Types.eliom Config.ml Db_funs.eliom Cells.eliom UnitTests.eliom SS.eliom
 # Source files for the client
-CLIENT_FILES := Types.eliom Formulas.eliom Cells.eliom UnitTests.eliom SS.eliom
+CLIENT_FILES := Types.eliom Db_funs.eliom Formulas.eliom Cells.eliom UnitTests.eliom SS.eliom
 
 # OCamlfind packages for the server
 SERVER_PACKAGES := mysql safepass cryptokit

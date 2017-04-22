@@ -6,17 +6,7 @@
   open Eliom_parameter
 }}
 
-(* TODO: Need a service for users to load sheets and work on them individually *)
-
 open Types
-
-let user_info =
-  Eliom_reference.Volatile.eref ~scope:Eliom_common.default_process_scope ~secure:true
-    {
-      username = None;
-      email = None;
-      verified = None
-    }
 
 module SS_app =
   Eliom_registration.App (
@@ -106,8 +96,6 @@ let blank_sheet_button =
   [a blank_sheet_service [pcdata "Blank Sheet"] ()
   ]
 
-(* TODO Add a button to instert a button into the selected area *)
-
 (* TODO: Add a dropdown of things the user can do with the selected region *)
 (*let dropdown =
   ul ~a:[a_class ["nav nav-pills"]]
@@ -130,7 +118,7 @@ let header_navbar_skeleton ?on_page (u : user) =
   let b2 = [login_logout_button u] in
   let btns =
     match on_page with
-    | Some `SignUp ->b2
+    | Some `SignUp -> b2
     | Some `NewAccount -> b2
     | Some `Login -> b1 @ b2
     | Some `Logout -> b1
@@ -287,18 +275,31 @@ let user_sheets_table (u : user) =
   let stop_scrolling () =
     document##onkeydown <- no_scroll_handler
 
+  (* TODO: Figure out how to replace the default right click menu with a custom one *)
+  let no_right_click_handler =
+    handler ( fun (clk : mouseEvent Js.t) ->
+        if clk##button = 2 (* 2 = Right Click *)
+        then (preventDefault clk; Js._false)
+        else Js._true
+    )
+
+  let stop_default_right_click () =
+    document##onmousedown <- no_right_click_handler
+
 }}
 
 let () =
   SS_app.register
     ~service:main_service
     (fun () () ->
-     let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ()}} in
+     let user = Eliom_reference.Volatile.get user_info in
+     let un = user.username in
+     let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ?username:%un ()}} in
      let _ = {unit{load_button ()}} in
      let _ = {unit{merge_area_button ()}} in
      let _ = {unit{print_h_button ()}} in
      let _ = {unit{stop_scrolling ()}} in
-     let user = Eliom_reference.Volatile.get user_info in
+     let _ = {unit{stop_default_right_click ()}} in
       Lwt.return
         (Eliom_tools.F.html
            ~title:"SS"
@@ -325,7 +326,7 @@ let () =
   SS_app.register
     ~service:test_service
     (fun () () ->
-      let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ()}} in
+      let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ~username:"test" ()}} in
       let _ = {unit{UnitTests.run_tests ()}} in
       Lwt.return
         (Eliom_tools.F.html
@@ -550,9 +551,10 @@ let () =
   SS_app.register
     ~service:blank_sheet_service
     (fun () () ->
-      let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ()}} in
-      let _ = {unit{stop_scrolling ()}} in
       let user = Eliom_reference.Volatile.get user_info in
+      let un = user.username in
+      let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ?username:%un ()}} in
+      let _ = {unit{stop_scrolling ()}} in
       Lwt.return
         (Eliom_tools.F.html
            ~title:"Blank Sheet"

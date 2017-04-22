@@ -1,3 +1,5 @@
+(* TODO: Need to escape double quotes when stings are saved!*)
+
 {server{
 
   (* Print a string to the server side shell -- for testing *)
@@ -496,7 +498,10 @@
         border_left = to_string @@ member "border_left" j;
         border_right = to_string @@ member "border_right" j;
       }
-    | _ -> failwith "Error: Received bad json!"
+    | _ -> (
+        ignore @@ %shell_print "Error: Reveived bad json!";
+        failwith "Error: Received bad json!"
+      )
 
   let json_string_of_ss () =
     let json_content =
@@ -510,12 +515,22 @@
   (* Parse a spreadsheet string into a ((int * int), cell) list *)
   let parse_ss_string (ss_string : string) =
     ignore @@ %shell_print "\n\nparse_ss_string:\n";
-    let () =
+  (*let () =
       Yojson.Basic.from_string ss_string
       |> Yojson.Basic.Util.to_assoc
       |> List.map cell_of_json
       |> List.iter (fun c -> ignore @@ %shell_print @@ string_of_cell c)
-    in
+    in*)
+    ignore @@ %shell_print "\n\nparse_ss_string *** Point 0 ***\n";
+    ignore @@ %shell_print ("\n\nss_string =\n" ^ ss_string);
+    let point_1 = Yojson.Basic.from_string ss_string in
+    ignore @@ %shell_print "\n\nparse_ss_string *** Point 1 ***\n";
+    let point_2 = Yojson.Basic.Util.to_assoc point_1 in
+    ignore @@ %shell_print "\n\nparse_ss_string *** Point 2 ***\n";
+    let point_3 = List.map cell_of_json point_2 in
+    ignore @@ %shell_print "\n\nparse_ss_string *** Point 3 ***\n";
+    List.iter (fun c -> ignore @@ %shell_print @@ string_of_cell c) point_3;
+    ignore @@ %shell_print "\n\nparse_ss_string *** Point 4 ***\n";
     Yojson.Basic.from_string ss_string
     |> Yojson.Basic.Util.to_assoc
     |> List.map cell_of_json
@@ -901,12 +916,13 @@
     Lwt.return_unit
 
   (* Save the entire contents of the hashtbl to the server *)
-  let save_ss_handler =
+  (*let save_ss_handler =
     handler (fun _ ->
         let ss_string = json_string_of_ss () in
         let () = ignore @@ %store_to_disc' ss_string in
         Js._true
     )
+  *)
 
   (* Load the entire contents of the spreadsheet from the server *)
   let load_ss_handler =
@@ -922,13 +938,119 @@
     let body = document##body in
     appendChild body btn
 
-  let save_button () =
+  let cancel_save_ss_handler (modal : divElement Js.t) =
+    handler (fun _ ->
+        modal##style##display <- Js.string "none";
+        Js._true
+    )
+
+  let show_save_confirm_modal msg =
+    ignore @@ %shell_print "\n\nshow_save_confirm_modal\n\n";
+    let div = createDiv document in
+    let msg_div = createDiv document in
+    div##id <- Js.string "save_confirm_modal";
+    div##className <- Js.string "modal";
+
+    msg_div##id <- Js.string "save_confirm_modal_msg";
+    msg_div##textContent <- Js.some @@ Js.string msg;
+
+    let close_btn = createButton document in
+    close_btn##className <- Js.string "btn btn-success";
+    close_btn##id <- Js.string "CloseSaveConfirmBtn";
+    close_btn##textContent <- Js.some @@ Js.string "OK";
+    close_btn##onmouseup <- handler (fun _ -> div##style##display <- Js.string "none"; Js._true);
+    appendChild div msg_div;
+    appendChild div close_btn;
+    appendChild document##body div
+
+  let complete_save_ss_handler (modal : divElement Js.t) username sheet_name_input sheet_data =
+    handler (fun _ ->
+        Lwt.async (
+          fun () -> (
+            let sheet_name =
+              match Js.to_string sheet_name_input##value with
+              | "" -> "Un-Named Sheet " ^ (string_of_float @@ Unix.time ())
+              | _ as sn -> sn
+            in
+            ignore @@ %shell_print "\n\ncomplete_save_ss_handler:\n\n";
+            ignore @@ %shell_print ("sheet_name = " ^ sheet_name);
+            lwt msg =
+              %Db_funs.save_or_update_sheet' (username, sheet_name, sheet_data)
+            in
+            modal##style##display <- Js.string "none";
+            show_save_confirm_modal msg;
+            Lwt.return_unit
+          )
+        );
+        Js._true
+    )
+
+  let cancel_save_button modal =
+    let btn = createButton document in
+    btn##className <- Js.string "btn btn-danger";
+    btn##id <- Js.string "CancelSaveBtn";
+    btn##textContent <- Js.some @@ Js.string "Cancel";
+    btn##onmouseup <- cancel_save_ss_handler modal;
+    btn
+
+  (* Appears in the save modal and completes the save *)
+  let complete_save_button modal username sheet_name_input =
+    let btn = createButton document in
+    btn##className <- Js.string "btn btn-success";
+    btn##id <- Js.string "CompleteSaveBtn";
+    btn##textContent <- Js.some @@ Js.string "Save";
+    btn##onmouseup <- complete_save_ss_handler modal username sheet_name_input (json_string_of_ss ());
+    btn
+
+  let save_modal ?sheet_name username =
+    let title_div = createDiv document in
+    title_div##id <- Js.string "save_modal_title_div";
+    title_div##textContent <- Js.some @@ Js.string "Save Spreadsheet";
+    let div = createDiv document in
+    div##id <- Js.string "save_modal";
+    div##className <- Js.string "modal";
+    let name_div = createDiv document in
+    name_div##id <- Js.string "save_modal_name_div";
+    let name_label = createDiv document in
+    name_label##id <- Js.string "save_modal_name_label";
+    name_label##textContent <- Js.some @@ Js.string "Name";
+    let name_input = createInput ~_type:(Js.string "text") document in
+    name_input##id <- Js.string "save_modal_name_input";
+    name_input##className <- Js.string "form-control";
+    name_input##style##width <- Js.string "100%";
+    name_input##placeholder <- Js.string "Spreadsheet Name...";
+    (
+      match sheet_name with
+      | None -> ()
+      | Some s -> name_input##value <- s
+    );
+    let description_div = createDiv document in
+    description_div##id <- Js.string "save_modal_description_div";
+    let description_input = createInput ~_type:(Js.string "text") document in
+    description_input##id <- Js.string "save_modal_description_input";
+    description_input##className <- Js.string "form-control";
+    description_input##style##width <- Js.string "100%";
+    description_input##placeholder <- Js.string "Description...";
+    appendChild name_div name_label;
+    appendChild name_div name_input;
+    appendChild description_div description_input;
+    appendChild div title_div;
+    appendChild div name_div;
+    appendChild div description_div;
+    appendChild div (cancel_save_button div);
+    appendChild div (complete_save_button div username name_input);
+    appendChild document##body div
+
+  let save_ss_modal_handler ?sheet_name username =
+    handler (fun _ -> save_modal ?sheet_name username; Js._true)
+
+  let save_button ?sheet_name username =
     let div = createDiv document in
     let btn = createButton document in
     btn##className <- Js.string "glyphicon glyphicon-floppy-disk";
     btn##id <- Js.string "SaveBtn";
     div##id <- Js.string "SaveBtnDiv";
-    btn##onmouseup <- save_ss_handler;
+    btn##onmouseup <- save_ss_modal_handler ?sheet_name username;
     appendChild div btn;
     div
 
@@ -1643,12 +1765,16 @@
     div
 
   (* Toolbar with Buttons *)
-  let toolbar () =
+  let toolbar ?username ?sheet_name () =
     let toolbar = createDiv document in
     toolbar##style##backgroundColor <- Js.string cell_background_color;
     toolbar##id <- Js.string "toolbar";
     let cp = color_picker () in
-    appendChild toolbar (save_button ());
+    (
+      match username with
+     | None -> ()
+     | Some un -> appendChild toolbar (save_button ?sheet_name un)
+    );
     appendChild toolbar (color_picker_div cp);
     appendChild toolbar (color_cells_btn cp);
     toolbar
@@ -1727,7 +1853,7 @@
       )
       else r
 
-  let rec fresh_table ?(table_body = None) ~nrows ~ncols () =
+  let rec fresh_table ?(table_body = None) ?username ?sheet_name ~nrows ~ncols () =
     let tbdy =
       match table_body with
       | None ->
@@ -1740,7 +1866,7 @@
     then (
       let tr = fresh_row ~row_num:(tbdy##rows##length) ~ncols () in
       appendChild tbdy tr;
-      fresh_table ~table_body:(Some tbdy) ~nrows ~ncols ()
+      fresh_table ~table_body:(Some tbdy) ?username ~nrows ~ncols ()
     )
     else (
       max_row := nrows;
@@ -1757,7 +1883,7 @@
       body##onkeyup <- key_release_handler;
       (*appendChild tbl tbdy;
         appendChild body tbl*)
-      appendChild tbl_div (toolbar ());
+      appendChild tbl_div (toolbar ?username ?sheet_name ());
       appendChild tbl tbdy;
       appendChild tbl_div tbl;
       appendChild body tbl_div

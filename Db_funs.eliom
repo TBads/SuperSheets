@@ -144,13 +144,11 @@ let pwd_req_check pwd =
      false, ("Error: " ^ length_msg ^ (*uppercase_msg ^ number_msg ^*) max_len_msg ^ spaces_msg)
 
 let user_number (username : string) =
-  print_string "\n\nuser_number\n\n";
   let conn = connect user_db in
   let esc s = Mysql.real_escape conn s in
   let sql_stmt =
     "SELECT user_number FROM SS.users WHERE username = '" ^ (esc username) ^ "'"
   in
-  print_string sql_stmt;
   match exec conn sql_stmt |> fetch with
   | Some a -> (
       disconnect conn;
@@ -176,26 +174,19 @@ let sheet_exists user_number sheet_name =
   else Lwt.return true
 
 let write_new_sheet (username : string) sheet_name sheet_data =
-  Lwt_io.print "\n\nwrite_new_sheet:\n\n" >>
   (* TODO Pick back up here, something is not working right here *)
   let conn = connect user_db in
   let esc s = Mysql.real_escape conn s in
   match user_number username with
-  | None -> (
-      Lwt_io.print "Error: write_new_sheet - user number not found" >>
-      Lwt.return "Error: Cannot save data! Please contact administrators."
-    )
+  | None -> Lwt.return "Error: Cannot save data! Please contact administrators."
   | Some n -> (
-      Lwt_io.print "write_new_sheet - user number found\n" >>
       let sql_stmt =
         "INSERT INTO SS.sheets (user_number, sheet_name, sheet_data)" ^
         " VALUES('" ^ (esc @@ string_of_int n) ^ "', '" ^ (esc sheet_name) ^ "', '" ^
         (esc sheet_data) ^ "')"
       in
-      Lwt_io.print ("\n\nsql_stmt = " ^ sql_stmt) >>
       let _ = exec conn sql_stmt in
       disconnect conn;
-      Lwt_io.print "Success: write_new_sheet - Data Saved" >>
       Lwt.return "Data Saved"
     )
 
@@ -218,21 +209,13 @@ let update_existing_sheet (username : string) sheet_name sheet_data =
 (* If the sheet exists then update it, otherwise write a new sheet *)
 (* TODO: need to add a check that the user is verified first *)
 let save_or_update_sheet ((username : string), (sheet_name : string), (sheet_data : string)) =
-  Lwt_io.print "\nsave_or_update_sheet\n" >>
   try_lwt (
     match user_number username with
     | Some n -> (
-        Lwt_io.print ("\nsave_or_update_sheet  Some " ^ (string_of_int n) ^ "\n\n") >>
         lwt exists = sheet_exists n sheet_name in
         if exists
-        then (
-          Lwt_io.print "\n\nExists\n\n" >>
-          update_existing_sheet username sheet_name sheet_data
-        )
-        else (
-          Lwt_io.print "\n\nNot Exists\n\n" >>
-          write_new_sheet username sheet_name sheet_data
-        )
+        then update_existing_sheet username sheet_name sheet_data
+        else write_new_sheet username sheet_name sheet_data
       )
     | _ -> Lwt.return "Error: save_or_update_sheet - no user number found"
   ) with
@@ -243,7 +226,6 @@ let save_or_update_sheet ((username : string), (sheet_name : string), (sheet_dat
 {shared{
   open Deriving_Json
 
-  (* TODO: Maybe change user to be a username by verified bool? *)
   type save_or_update_arg = (string * string * string) deriving (Json)
 
 }}
@@ -260,10 +242,26 @@ let user_sheets username =
   | None -> (disconnect conn; [])
   | Some un -> (
       let sql_stmt =
-        "SELECT sheet_name from SS.sheets " ^
+        "SELECT sheet_name FROM SS.sheets " ^
         "WHERE user_number = '" ^ (esc @@ string_of_int un) ^ "'"
       in
       let query_result = exec conn sql_stmt in
       disconnect conn;
       sll_of_res query_result |> List.map List.hd
     )
+(* TODO: need to check if the user has been verified *)
+let sheet_data username sheet_name =
+  let conn = connect user_db in
+  let esc s = Mysql.real_escape conn s in
+  match user_number username with
+  | None    -> raise (Db_Error "Error: User Number not found!")
+  | Some un ->
+    let sql_stmt =
+      "SELECT sheet_data FROM SS.sheets " ^
+      "WHERE user_number = '" ^ (esc @@ string_of_int un) ^ "' " ^
+      "AND sheet_name = '" ^ (esc sheet_name) ^ "'"
+    in
+    let query_result = exec conn sql_stmt in
+    disconnect conn;
+    try sll_of_res query_result |> List.hd |> List.hd
+    with Failure "hd" -> raise (Db_Error "Error: No data found!")

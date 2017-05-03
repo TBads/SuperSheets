@@ -1,4 +1,5 @@
 (* TODO: Need to escape double quotes when stings are saved!*)
+(* TODO: Need buttons to bold & italizise text *)
 
 {server{
 
@@ -169,7 +170,7 @@
     |> Array.to_list
     |> List.flatten
 
-  (* Given an element id, get the cell from the DOM *)
+  (* Given an element id, get the cell FROM THE DOM *)
   let cell_of_id (id : string) =
     (* Change the id if the cell is a merged cell *)
     let real_id =
@@ -780,6 +781,26 @@
       Js._false
     )
 
+(* TODO: Why won't this work? Maybe I need to stop the default action *)
+let f2_prevent_default (td : tableCellElement Js.t) =
+  handler (fun key_release ->
+      match key_release##keyCode with
+      | 113 -> (preventDefault key_release; Js._true)
+      | _ -> Js._true
+    )
+
+  let f2_handler (td : tableCellElement Js.t) =
+    ignore @@ %shell_print "\n\nf2_handler called\n\n";
+    handler (fun key_release ->
+        match key_release##keyCode with
+        | 113 -> (
+            td##textContent <- Js.null;
+            formula_bar ~td ();
+            Js._true
+          )
+        | _ -> Js._true
+    )
+
   let merge_area ?(blank_cell = false) (cl : cell list) =
     match merge_checks cl with
     | `Fail msg -> window##alert (Js.string msg)
@@ -813,6 +834,7 @@
               new_td##colSpan <- height;
               new_td##style##backgroundColor <- Js.string cell_background_color;
               new_td##onmousedown <- click_handler new_td;
+              new_td##onkeyup <- f2_handler new_td;
               new_td##ondblclick <- dbl_click_handler new_td;
               new_td##id <- old_td##id;
               if blank_cell
@@ -1300,10 +1322,9 @@
     List.iter (fun c ->
         try (
           let td = getElementById (id_of_cell c) in
- (* TODO TODO TODO Replace background color if the cell is in h, not always default color *)
-          if Hashtbl.mem merged_h (key_of_id @@ id_of_cell c)
+          if Hashtbl.mem h (key_of_id @@ id_of_cell c)
           then (
-            let old_color = color_of_cell  @@ get_cell (key_of_id @@ id_of_cell c) in
+            let old_color = color_of_cell @@ get_cell (key_of_id @@ id_of_cell c) in
             td##style##backgroundColor <- Js.string old_color
           )
           else td##style##backgroundColor <- Js.string cell_background_color
@@ -1712,8 +1733,8 @@
   let key_release_handler =
     handler (fun key_release ->
         match key_release##keyCode with
-        | 16 -> shift_release_action (); Js._true
-        | _ -> (); Js._true
+        | 16 -> (shift_release_action (); Js._true)
+        | _ -> Js._true
       )
 
   (* Colorpicker *)
@@ -1764,6 +1785,82 @@
     appendChild div cp;
     div
 
+  (* Make cell text bold *)
+  let bold_button () =
+    let div = createDiv document in
+    let btn = createButton document in
+    btn##className <- Js.string "glyphicon glyphicon-bold";
+    btn##id <- Js.string "BoldBtn";
+    div##id <- Js.string "BoldBtnDiv";
+    btn##onmouseup <- handler (fun _ ->
+        match !selected_area, !selected_cell with
+        | None, None -> Js._true
+        | None, Some sel_c -> (
+              let td =
+                match sel_c with
+                | SingleCell sc -> getElementById sc.id
+                | MergedCell mc -> getElementById mc.id
+              in
+              if td##style##fontWeight = Js.string "bold"
+              then td##style##fontWeight <- Js.string "normal"
+              else td##style##fontWeight <- Js.string "bold";
+              Js._true
+          )
+        | Some sa, _ -> (
+            List.iter (fun (c : cell) ->
+              let td =
+                match c with
+                | SingleCell sc -> getElementById sc.id
+                | MergedCell mc -> getElementById mc.id
+              in
+              if td##style##fontWeight = Js.string "bold"
+              then td##style##fontWeight <- Js.string "normal"
+              else td##style##fontWeight <- Js.string "bold"
+            ) sa;
+          Js._true
+          )
+      );
+    appendChild div btn;
+    div
+
+  (* Make cell text italisized *)
+  let italic_button () =
+    let div = createDiv document in
+    let btn = createButton document in
+    btn##className <- Js.string "glyphicon glyphicon-italic";
+    btn##id <- Js.string "ItalicBtn";
+    div##id <- Js.string "ItalicBtnDiv";
+    btn##onmouseup <- handler (fun _ ->
+        match !selected_area, !selected_cell with
+        | None, None -> Js._true
+        | None, Some sel_c -> (
+              let td =
+                match sel_c with
+                | SingleCell sc -> getElementById sc.id
+                | MergedCell mc -> getElementById mc.id
+              in
+              if td##style##fontStyle = Js.string "italic"
+              then td##style##fontStyle <- Js.string "normal"
+              else td##style##fontStyle <- Js.string "italic";
+              Js._true
+          )
+        | Some sa, _ -> (
+            List.iter (fun (c : cell) ->
+              let td =
+                match c with
+                | SingleCell sc -> getElementById sc.id
+                | MergedCell mc -> getElementById mc.id
+              in
+              if td##style##fontStyle = Js.string "italic"
+              then td##style##fontStyle <- Js.string "normal"
+              else td##style##fontStyle <- Js.string "italic"
+            ) sa;
+          Js._true
+          )
+      );
+    appendChild div btn;
+    div
+
   (* Toolbar with Buttons *)
   let toolbar ?username ?sheet_name () =
     let toolbar = createDiv document in
@@ -1777,6 +1874,8 @@
     );
     appendChild toolbar (color_picker_div cp);
     appendChild toolbar (color_cells_btn cp);
+    appendChild toolbar (bold_button ());
+    appendChild toolbar (italic_button ());
     toolbar
 
   (* Create a new & empty cell *)
@@ -1790,6 +1889,7 @@
     td##style##maxHeight       <- Js.string "25px";
     td##style##overflow        <- Js.string "hidden";
     td##id                     <- Js.string id;
+    td##onkeyup                <- f2_handler td;
     td##ondblclick             <- dbl_click_handler td;
     td##onmousedown            <- click_handler td;
     td

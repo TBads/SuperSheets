@@ -197,6 +197,42 @@ td {
    margin-bottom: auto;
 }
 
+#LeftAlignTxtBtn {
+   width: 45px;
+   height: 35px;
+   border: none;
+   background: none;
+}
+
+#LeftAlignTxtBtnDiv {
+   width: 50px;
+   height: 40px;
+   display: inline-block;
+   float: left;
+   margin-top: 4px;
+   margin-left: 2px;
+   margin-right: 2px;
+   margin-bottom: auto;
+}
+
+#RightAlignTxtBtn {
+   width: 45px;
+   height: 35px;
+   border: none;
+   background: none;
+}
+
+#RightAlignTxtBtnDiv {
+   width: 50px;
+   height: 40px;
+   display: inline-block;
+   float: left;
+   margin-top: 4px;
+   margin-left: 2px;
+   margin-right: 2px;
+   margin-bottom: auto;
+}
+
 button#ColorPickerBtn.glyphicon.glyphicon-tint {
   font-size: 20px
 }

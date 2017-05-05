@@ -711,26 +711,45 @@
         match !selected_cell, !shift_pressed with
         | None, true -> (
             selected_cell := cell_of_id (Js.to_string td##id);
-            td##style##border <- Js.string "3px solid black";
+            td##style##borderTop       <- Js.string "3px solid black";
+            td##style##borderBottom    <- Js.string "2px solid black";
+            td##style##borderLeft      <- Js.string "3px solid black";
+            td##style##borderRight     <- Js.string "2px solid black";
             td##style##backgroundColor <- Js.string "yellow"
           )
         | None, false -> (
             selected_cell := cell_of_id (Js.to_string td##id);
-            td##style##border <- Js.string "3px solid black"
+            td##style##borderTop    <- Js.string "3px solid black";
+            td##style##borderBottom <- Js.string "2px solid black";
+            td##style##borderLeft   <- Js.string "3px solid black";
+            td##style##borderRight  <- Js.string "2px solid black"
           )
         | Some sel_c, true -> (
             let c = getElementById @@ id_of_cell sel_c in
-            c##style##border <- Js.string "initial" (*"1px solid black"*);
+            c##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
+            c##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
+            c##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
+            c##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
             selected_cell := cell_of_id (Js.to_string td##id);
-            td##style##border <- Js.string "initial" (*"3px solid black"*);
+            td##style##borderTop    <- Js.string "3px solid black";
+            td##style##borderBottom <- Js.string "2px solid black";
+            td##style##borderLeft   <- Js.string "3px solid black";
+            td##style##borderRight  <- Js.string "2px solid black";
             td##style##backgroundColor <- Js.string "yellow";
             add_to_selected_area !selected_cell
           )
         | Some sel_c, false -> (
             let c = getElementById @@ id_of_cell sel_c in
             c##style##border <- Js.string "initial" (*"1px solid black"*);
+            c##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
+            c##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
+            c##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
+            c##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
             selected_cell := cell_of_id (Js.to_string td##id);
-            td##style##border <- Js.string "3px solid black"
+            td##style##borderTop    <- Js.string "3px solid black";
+            td##style##borderBottom <- Js.string "2px solid black";
+            td##style##borderLeft   <- Js.string "3px solid black";
+            td##style##borderRight  <- Js.string "2px solid black"
           )
       )
       else ();
@@ -1264,10 +1283,7 @@ let f2_prevent_default (td : tableCellElement Js.t) =
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
             cl##style##display <- Js.string "none";
-            cl##style##borderBottom <- Js.string "2px solid black";
-            cl##style##borderBottomColor <- Js.string "black";
-            cl##style##borderBottomWidth <- Js.string "2px";
-            cl##style##borderBottomStyle <- Js.string "solid";
+            cl##style##borderBottom <- Js.string "1px solid black";
             cl##style##display <- Js.string "table-cell"
           ) l
     )
@@ -1297,7 +1313,7 @@ let f2_prevent_default (td : tableCellElement Js.t) =
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
             cl##style##display <- Js.string "none";
-            cl##style##borderRight <- Js.string "2px solid black";
+            cl##style##borderRight <- Js.string "1px solid black";
             cl##style##display <- Js.string "table-cell"
           ) l
     )
@@ -1627,9 +1643,9 @@ let f2_prevent_default (td : tableCellElement Js.t) =
         | Some up_c ->
             let sc = getElementById @@ id_of_cell sel_c in
             sc##style##display      <- Js.string "none";
-            sc##style##borderTop    <- Js.string "1px solid #313B4C"; (* TODO: css class? *)
+            sc##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
             sc##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
-            sc##style##borderLeft   <- Js.string "1px solid #313B4C"; (* TODO: css class? *)
+            sc##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
             sc##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
             sc##style##display      <- Js.string "table-cell";
             let uc = getElementById @@ id_of_cell up_c in
@@ -1639,7 +1655,7 @@ let f2_prevent_default (td : tableCellElement Js.t) =
             uc##style##borderBottom      <- Js.string "2px solid black";
             uc##style##borderLeft        <- Js.string "3px solid black";
             uc##style##borderRight       <- Js.string "2px solid black";
-            uc##style##display     <- Js.string "table-cell"
+            uc##style##display           <- Js.string "table-cell"
       )
     | Some sel_c, true -> (
         un_border_all (); (* TODO: poor solution for now *)
@@ -1661,9 +1677,9 @@ let f2_prevent_default (td : tableCellElement Js.t) =
         | Some down_c ->
           let sc = getElementById @@ id_of_cell sel_c in
           sc##style##display      <- Js.string "none";
-          sc##style##borderTop    <- Js.string "1px solid #313B4C"; (* TODO: css class? *)
+          sc##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
           sc##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
-          sc##style##borderLeft   <- Js.string "1px solid #313B4C"; (* TODO: css class? *)
+          sc##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
           sc##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
           sc##style##display      <- Js.string "table-cell";
           let dc = getElementById @@ id_of_cell down_c in
@@ -1695,9 +1711,9 @@ let f2_prevent_default (td : tableCellElement Js.t) =
         | Some left_c ->
           let sc = getElementById @@ id_of_cell sel_c in
           sc##style##display      <- Js.string "none";
-          sc##style##borderTop    <- Js.string "1px solid #313B4C"; (* TODO: css class? *)
+          sc##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
           sc##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
-          sc##style##borderLeft   <- Js.string "1px solid #313B4C"; (* TODO: css class? *)
+          sc##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
           sc##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
           sc##style##display      <- Js.string "table-cell";
           let lc = getElementById @@ id_of_cell left_c in
@@ -1729,9 +1745,9 @@ let f2_prevent_default (td : tableCellElement Js.t) =
         | Some right_c ->
           let sc = getElementById @@ id_of_cell sel_c in
           sc##style##display      <- Js.string "none";
-          sc##style##borderTop    <- Js.string "1px solid #313B4C"; (* TODO: css class? *)
+          sc##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
           sc##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
-          sc##style##borderLeft   <- Js.string "1px solid #313B4C"; (* TODO: css class? *)
+          sc##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
           sc##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
           sc##style##display      <- Js.string "table-cell";
           let rc = getElementById @@ id_of_cell right_c in
@@ -1932,6 +1948,82 @@ let f2_prevent_default (td : tableCellElement Js.t) =
     appendChild div btn;
     div
 
+  (* Left align the text *)
+  let left_align_text_button () =
+    let div = createDiv document in
+    let btn = createButton document in
+    btn##className <- Js.string "glyphicon glyphicon-align-left";
+    btn##id <- Js.string "LeftAlignTxtBtn";
+    div##id <- Js.string "LeftAlignTxtBtnDiv";
+    btn##onmouseup <- handler (fun _ ->
+        match !selected_area, !selected_cell with
+        | None, None -> Js._true
+        | None, Some sel_c -> (
+              let td =
+                match sel_c with
+                | SingleCell sc -> getElementById sc.id
+                | MergedCell mc -> getElementById mc.id
+              in
+              if td##style##textAlign = Js.string "left"
+              then td##style##textAlign <- Js.string "initial"
+              else td##style##textAlign <- Js.string "left";
+              Js._true
+          )
+        | Some sa, _ -> (
+            List.iter (fun (c : cell) ->
+              let td =
+                match c with
+                | SingleCell sc -> getElementById sc.id
+                | MergedCell mc -> getElementById mc.id
+              in
+              if td##style##textAlign = Js.string "left"
+              then td##style##textAlign <- Js.string "initial"
+              else td##style##textAlign <- Js.string "left"
+            ) sa;
+          Js._true
+          )
+      );
+    appendChild div btn;
+    div
+
+  (* Right align the text *)
+  let right_align_text_button () =
+    let div = createDiv document in
+    let btn = createButton document in
+    btn##className <- Js.string "glyphicon glyphicon-align-right";
+    btn##id <- Js.string "RightAlignTxtBtn";
+    div##id <- Js.string "RightAlignTxtBtnDiv";
+    btn##onmouseup <- handler (fun _ ->
+        match !selected_area, !selected_cell with
+        | None, None -> Js._true
+        | None, Some sel_c -> (
+              let td =
+                match sel_c with
+                | SingleCell sc -> getElementById sc.id
+                | MergedCell mc -> getElementById mc.id
+              in
+              if td##style##textAlign = Js.string "right"
+              then td##style##textAlign <- Js.string "initial"
+              else td##style##textAlign <- Js.string "right";
+              Js._true
+          )
+        | Some sa, _ -> (
+            List.iter (fun (c : cell) ->
+              let td =
+                match c with
+                | SingleCell sc -> getElementById sc.id
+                | MergedCell mc -> getElementById mc.id
+              in
+              if td##style##textAlign = Js.string "right"
+              then td##style##textAlign <- Js.string "initial"
+              else td##style##textAlign <- Js.string "right"
+            ) sa;
+          Js._true
+          )
+      );
+    appendChild div btn;
+    div
+
   (* Toolbar with Buttons *)
   let toolbar ?username ?sheet_name () =
     let toolbar = createDiv document in
@@ -1947,7 +2039,9 @@ let f2_prevent_default (td : tableCellElement Js.t) =
     appendChild toolbar (color_cells_btn cp);
     appendChild toolbar (bold_button ());
     appendChild toolbar (italic_button ());
+    appendChild toolbar (left_align_text_button ());
     appendChild toolbar (center_text_button ());
+    appendChild toolbar (right_align_text_button ());
     toolbar
 
   (* Create a new & empty cell *)
@@ -1960,9 +2054,9 @@ let f2_prevent_default (td : tableCellElement Js.t) =
     td##style##height          <- Js.string "25px";
     td##style##maxHeight       <- Js.string "25px";
     td##style##overflow        <- Js.string "hidden";
-    td##style##borderTop       <- Js.string "1px solid #313B4C"; (* TODO: Put in a css class? *)
+    td##style##borderTop       <- Js.string "1px solid black"; (* TODO: Put in a css class? *)
     td##style##borderBottom    <- Js.string "0px";               (* TODO: Put in a css class? *)
-    td##style##borderLeft      <- Js.string "1px solid #313B4C"; (* TODO: Put in a css class? *)
+    td##style##borderLeft      <- Js.string "1px solid black"; (* TODO: Put in a css class? *)
     td##style##borderRight     <- Js.string "0px";               (* TODO: Put in a css class? *)
     td##id                     <- Js.string id;
     td##onkeyup                <- f2_handler td;

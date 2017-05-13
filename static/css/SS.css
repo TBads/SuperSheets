@@ -233,6 +233,26 @@ td {
    margin-bottom: auto;
 }
 
+#BorderDropdownBtn {
+   width: 100px;
+   height: 30px;
+   margin-top: 3px;
+   border-radius: 3px;
+   border: none;
+   background-color: #E9E9E9;
+}
+
+#BorderDropdownDiv {
+   width: 100px;
+   height: 40px;
+   display: inline-block;
+   float: left;
+   margin-top: 4px;
+   margin-left: 2px;
+   margin-right: 2px;
+   margin-bottom: auto;
+}
+
 button#ColorPickerBtn.glyphicon.glyphicon-tint {
   font-size: 20px
 }

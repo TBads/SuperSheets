@@ -781,7 +781,6 @@
       )
 
   (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
-  (* TODO: Pick back up with the click TODOs*)
   let click_handler (td : tableCellElement Js.t) =
     handler (fun (clk : mouseEvent Js.t) ->
       if clk##button = 0
@@ -804,10 +803,6 @@
           )
         | Some sel_c, true -> (
             let c = getElementById @@ id_of_cell sel_c in
-            c##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
-            c##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
-            c##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
-            c##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
             selected_cell := cell_of_id (Js.to_string td##id);
             td##style##borderTop    <- Js.string "3px solid black";
             td##style##borderBottom <- Js.string "2px solid black";
@@ -818,11 +813,10 @@
           )
         | Some sel_c, false -> (
             let c = getElementById @@ id_of_cell sel_c in
-            c##style##border       <- Js.string "initial"          (*"1px solid black"*);
-            c##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
-            c##style##borderBottom <- Js.string "0px";             (* TODO: css class? *)
-            c##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
-            c##style##borderRight  <- Js.string "0px";             (* TODO: css class? *)
+            c##style##borderTop    <- Js.string @@ existing_border_style ~side:`Top c;
+            c##style##borderBottom <- Js.string @@ existing_border_style ~side:`Bottom c;
+            c##style##borderLeft   <- Js.string @@ existing_border_style ~side:`Left c;
+            c##style##borderRight  <- Js.string @@ existing_border_style ~side:`Right c;
             selected_cell := cell_of_id (Js.to_string td##id);
             td##style##borderTop    <- Js.string "3px solid black";
             td##style##borderBottom <- Js.string "2px solid black";

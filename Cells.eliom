@@ -1,5 +1,4 @@
 (* TODO: Need to escape double quotes when stings are saved!*)
-(* TODO: Need buttons to bold & italizise text *)
 
 {server{
 
@@ -77,32 +76,32 @@
     match c with
     | SingleCell sc ->
       "\n{" ^
-      "  row    = " ^ (string_of_int sc.row) ^ ";" ^
-      "  col    = " ^ (string_of_int sc.col) ^ ";" ^
-      "  id     = " ^ sc.id ^ ";" ^
-      "  txt_in = " ^ sc.txt_in ^ ";" ^
-      "  txt    = " ^ sc.txt ^ ";" ^
-      "  color  = " ^ sc.color ^ ";" ^
-      "  border_top  = " ^ sc.border_top ^ ";" ^
-      "  border_bottom  = " ^ sc.border_bottom ^ ";" ^
-      "  border_left  = " ^ sc.border_left ^ ";" ^
-      "  border_right  = " ^ sc.border_right ^
-      "}"
+      "\n  row    = " ^ (string_of_int sc.row) ^ ";" ^
+      "\n  col    = " ^ (string_of_int sc.col) ^ ";" ^
+      "\n  id     = " ^ sc.id ^ ";" ^
+      "\n  txt_in = " ^ sc.txt_in ^ ";" ^
+      "\n  txt    = " ^ sc.txt ^ ";" ^
+      "\n  color  = " ^ sc.color ^ ";" ^
+      "\n  border_top  = " ^ sc.border_top ^ ";" ^
+      "\n  border_bottom  = " ^ sc.border_bottom ^ ";" ^
+      "\n  border_left  = " ^ sc.border_left ^ ";" ^
+      "\n  border_right  = " ^ sc.border_right ^
+      "\n}"
     | MergedCell mc -> (
         "\n{" ^
-        "  top_row     = " ^ (string_of_int mc.top_row) ^ ";" ^
-        "  bottom_row  = " ^ (string_of_int mc.bottom_row) ^ ";" ^
-        "  left_col    = " ^ (string_of_int mc.left_col) ^ ";" ^
-        "  right_col   = " ^ (string_of_int mc.right_col) ^ ";" ^
-        "  id          = " ^ mc.id ^ ";" ^
-        "  txt_in      = " ^ mc.txt_in ^ ";" ^
-        "  txt         = " ^ mc.txt ^ ";" ^
-        "  color       = " ^ mc.color ^ ";" ^
-        "  border_top  = " ^ mc.border_top ^ ";" ^
-        "  border_bottom  = " ^ mc.border_bottom ^ ";" ^
-        "  border_left  = " ^ mc.border_left ^ ";" ^
-        "  border_right  = " ^ mc.border_right ^
-        "}"
+        "\n  top_row     = " ^ (string_of_int mc.top_row) ^ ";" ^
+        "\n  bottom_row  = " ^ (string_of_int mc.bottom_row) ^ ";" ^
+        "\n  left_col    = " ^ (string_of_int mc.left_col) ^ ";" ^
+        "\n  right_col   = " ^ (string_of_int mc.right_col) ^ ";" ^
+        "\n  id          = " ^ mc.id ^ ";" ^
+        "\n  txt_in      = " ^ mc.txt_in ^ ";" ^
+        "\n  txt         = " ^ mc.txt ^ ";" ^
+        "\n  color       = " ^ mc.color ^ ";" ^
+        "\n  border_top  = " ^ mc.border_top ^ ";" ^
+        "\n  border_bottom  = " ^ mc.border_bottom ^ ";" ^
+        "\n  border_left  = " ^ mc.border_left ^ ";" ^
+        "\n  border_right  = " ^ mc.border_right ^
+        "\n}"
       )
 
   let string_of_cell_list (cl : cell list option) =
@@ -437,6 +436,58 @@
       })
     )
 
+  let update_cell_border_in_h ~side (key : int * int) (border : string) =
+    ignore @@ %shell_print "\nupdate_cell_border_in_h:\n";
+    ignore @@ %shell_print ("   key = "^(string_of_int @@ fst key)^", "^(string_of_int @@ snd key));
+    if Hashtbl.mem h key
+    then (
+      let old_cell = Hashtbl.find h key in
+      let new_cell =
+        match old_cell with
+        | SingleCell sc  -> SingleCell {
+              row           = sc.row;
+              col           = sc.row;
+              id            = sc.id;
+              txt_in        = sc.txt_in;
+              txt           = sc.txt;
+              color         = sc.color;
+              border_top    = if side = `Top then border else sc.border_top;
+              border_bottom = if side = `Bottom then border else sc.border_bottom;
+              border_left   = if side = `Left then border else sc.border_left;
+              border_right  = if side = `Right then border else sc.border_right
+            }
+        | MergedCell mc -> MergedCell {
+              top_row       = mc.top_row;
+              bottom_row    = mc.bottom_row;
+              left_col      = mc.left_col;
+              right_col     = mc.right_col;
+              id            = mc.id;
+              txt_in        = mc.txt_in;
+              txt           = mc.txt;
+              color         = mc.color;
+              border_top    = if side = `Top then border else mc.border_top;
+              border_bottom = if side = `Bottom then border else mc.border_bottom;
+              border_left   = if side = `Left then border else mc.border_left;
+              border_right  = if side = `Right then border else mc.border_right;
+            }
+        in
+        Hashtbl.replace h key new_cell
+    )
+    else (
+      store_cell key (SingleCell {
+          row           = fst key;
+          col           = snd key;
+          id            = id_of_key (fst key) (snd key);
+          txt_in        = "";
+          txt           = "";
+          color         = cell_background_color;
+          border_top    = if side = `Top then border else "1px solid black";
+          border_bottom = if side = `Bottom then border else "";
+          border_left   = if side = `Left then border else "1px solid black";
+          border_right  = if side = `Right then border else "";
+      })
+    )
+
   let get_cell key = Hashtbl.find h key
 
   let json_of_cell (c : cell) =
@@ -703,7 +754,34 @@
     | None, Some c -> selected_area := Some [c]
     | Some sa, Some c -> selected_area := Some (c :: sa)
 
+  let existing_border_style ?style ~side (td : Dom_html.element Js.t) =
+    let f c =
+      match c, side with
+      | SingleCell sc, `Top    -> sc.border_top
+      | SingleCell sc, `Bottom -> sc.border_bottom
+      | SingleCell sc, `Left   -> sc.border_left
+      | SingleCell sc, `Right  -> sc.border_right
+      | MergedCell sc, `Top    -> sc.border_top
+      | MergedCell sc, `Bottom -> sc.border_bottom
+      | MergedCell sc, `Left   -> sc.border_left
+      | MergedCell sc, `Right  -> sc.border_right
+    in
+    match style with
+    | Some s -> s
+    | None ->
+      let id = key_of_id (Js.to_string td##id) in
+      if Hashtbl.mem h id
+      then (f @@ Hashtbl.find h id)
+      else (
+        match side with
+        | `Top    -> "1px solid black"
+        | `Bottom -> "0px"
+        | `Left   -> "1px solid black"
+        | `Right  -> "0px"
+      )
+
   (* On Right Click, bring up a menu. 0 = left click, 2 = right click *)
+  (* TODO: Pick back up with the click TODOs*)
   let click_handler (td : tableCellElement Js.t) =
     handler (fun (clk : mouseEvent Js.t) ->
       if clk##button = 0
@@ -740,11 +818,11 @@
           )
         | Some sel_c, false -> (
             let c = getElementById @@ id_of_cell sel_c in
-            c##style##border <- Js.string "initial" (*"1px solid black"*);
+            c##style##border       <- Js.string "initial"          (*"1px solid black"*);
             c##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
-            c##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
+            c##style##borderBottom <- Js.string "0px";             (* TODO: css class? *)
             c##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
-            c##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
+            c##style##borderRight  <- Js.string "0px";             (* TODO: css class? *)
             selected_cell := cell_of_id (Js.to_string td##id);
             td##style##borderTop    <- Js.string "3px solid black";
             td##style##borderBottom <- Js.string "2px solid black";
@@ -800,13 +878,13 @@
       Js._false
     )
 
-(* TODO: Why won't this work? Maybe I need to stop the default action *)
-let f2_prevent_default (td : tableCellElement Js.t) =
-  handler (fun key_release ->
-      match key_release##keyCode with
-      | 113 -> (preventDefault key_release; Js._true)
-      | _ -> Js._true
-    )
+  (* TODO: Why won't this work? Maybe I need to stop the default action *)
+  (*let f2_prevent_default (td : tableCellElement Js.t) =
+    handler (fun key_release ->
+        match key_release##keyCode with
+        | 113 -> (preventDefault key_release; Js._true)
+        | _ -> Js._true
+      )
 
   let f2_handler (td : tableCellElement Js.t) =
     ignore @@ %shell_print "\n\nf2_handler called\n\n";
@@ -818,7 +896,7 @@ let f2_prevent_default (td : tableCellElement Js.t) =
             Js._true
           )
         | _ -> Js._true
-    )
+    )*)
 
   let merge_area ?(blank_cell = false) (cl : cell list) =
     match merge_checks cl with
@@ -853,7 +931,7 @@ let f2_prevent_default (td : tableCellElement Js.t) =
               new_td##colSpan <- height;
               new_td##style##backgroundColor <- Js.string cell_background_color;
               new_td##onmousedown <- click_handler new_td;
-              new_td##onkeyup <- f2_handler new_td;
+              (*new_td##onkeyup <- f2_handler new_td;*)
               new_td##ondblclick <- dbl_click_handler new_td;
               new_td##id <- old_td##id;
               if blank_cell
@@ -1191,16 +1269,15 @@ let f2_prevent_default (td : tableCellElement Js.t) =
           | MergedCell mc -> mc.right_col = right_col_num
       ) sa
 
-  let un_border_top_row () =
+  let un_border_top_row ?style () =
     try (
       match selected_area_top_row () with
       | [] -> ()
       | l  ->
         List.iter (fun c ->
-            (* Hide the cell then re-draw on the page b/c of rendering bug *)
             let cl = getElementById (id_of_cell c) in
             cl##style##display <- Js.string "none";
-            cl##style##borderTop <- Js.string "1px solid black";
+            cl##style##borderTop <- Js.string (existing_border_style ?style ~side:`Top cl);
             cl##style##display <- Js.string "table-cell"
           ) l
     )
@@ -1216,16 +1293,14 @@ let f2_prevent_default (td : tableCellElement Js.t) =
             let cl = getElementById (id_of_cell c) in
             cl##style##display <- Js.string "none";
             cl##style##borderBottom <- Js.string "0px";
-            (*cl##style##borderBottomColor <- Js.string "black";*)
             cl##style##borderBottomWidth <- Js.string "0px";
-            (*cl##style##borderBottomStyle <- Js.string "solid";*)
             cl##style##display <- Js.string "table-cell"
           ) l
     )
     with
     | _ -> () (* TODO: Log Error *)
 
-  let un_border_left_col () =
+  let un_border_left_col ?style () =
     try (
       match selected_area_left_col () with
       | [] -> ()
@@ -1233,7 +1308,7 @@ let f2_prevent_default (td : tableCellElement Js.t) =
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
             cl##style##display <- Js.string "none";
-            cl##style##borderLeft <- Js.string "1px solid black";
+            cl##style##borderLeft <- Js.string (existing_border_style ?style ~side:`Left cl);
             cl##style##display <- Js.string "table-cell"
           ) l
     )
@@ -1261,36 +1336,39 @@ let f2_prevent_default (td : tableCellElement Js.t) =
     un_border_left_col ();
     un_border_right_col ()
 
-  let border_top_row () =
+  let border_top_row ?(store = false) ?(style = "2px solid black") () =
     try (
       match selected_area_top_row () with
       | [] -> ()
       | l  -> List.iter (fun c ->
           let cl = getElementById (id_of_cell c) in
           cl##style##display <- Js.string "none";
-          cl##style##borderTop <- Js.string "2px solid black";
-          cl##style##display <- Js.string "table-cell"
+          cl##style##borderTop <- Js.string style;
+          cl##style##display <- Js.string "table-cell";
+          if store
+          then update_cell_border_in_h ~side:`Top (key_of_id @@ Js.to_string cl##id) style
+          else ()
         ) l
     )
     with
     | _ -> () (* TODO: Log Error *)
 
-  let border_bottom_row () =
-    try (
+let border_bottom_row ?(style = "1px solid black") () =
+  try (
       match selected_area_bottom_row () with
       | [] -> ()
       | l  ->
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
             cl##style##display <- Js.string "none";
-            cl##style##borderBottom <- Js.string "1px solid black";
+            cl##style##borderBottom <- Js.string style;
             cl##style##display <- Js.string "table-cell"
           ) l
     )
     with
     | _ -> () (* TODO: Log Error *)
 
-  let border_left_col () =
+  let border_left_col ?(store = false) ?(style = "2px solid black") () =
     try (
       match selected_area_left_col () with
       | [] -> ()
@@ -1298,14 +1376,17 @@ let f2_prevent_default (td : tableCellElement Js.t) =
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
             cl##style##display <- Js.string "none";
-            cl##style##borderLeft <- Js.string "2px solid black";
-            cl##style##display <- Js.string "table-cell"
+            cl##style##borderLeft <- Js.string style;
+            cl##style##display <- Js.string "table-cell";
+            if store
+            then update_cell_border_in_h ~side:`Left (key_of_id @@ Js.to_string cl##id) style
+            else ()
           ) l
     )
     with
     | _ -> () (* TODO: Log Error *)
 
-  let border_right_col () =
+  let border_right_col ?(style = "1px solid black") () =
     try (
       match selected_area_right_col () with
       | [] -> ()
@@ -1313,7 +1394,7 @@ let f2_prevent_default (td : tableCellElement Js.t) =
           List.iter (fun c ->
             let cl = getElementById (id_of_cell c) in
             cl##style##display <- Js.string "none";
-            cl##style##borderRight <- Js.string "1px solid black";
+            cl##style##borderRight <- Js.string style;
             cl##style##display <- Js.string "table-cell"
           ) l
     )
@@ -1341,9 +1422,9 @@ let f2_prevent_default (td : tableCellElement Js.t) =
           if Hashtbl.mem h (key_of_id @@ id_of_cell c)
           then (
             let old_color = color_of_cell @@ get_cell (key_of_id @@ id_of_cell c) in
-            td##style##backgroundColor <- Js.string old_color
+            td##style##backgroundColor <- Js.string old_color;
           )
-          else td##style##backgroundColor <- Js.string cell_background_color
+          else td##style##backgroundColor <- Js.string cell_background_color;
         )
         with _ -> () (* TODO: Log error here *)
       ) cl
@@ -1643,10 +1724,10 @@ let f2_prevent_default (td : tableCellElement Js.t) =
         | Some up_c ->
             let sc = getElementById @@ id_of_cell sel_c in
             sc##style##display      <- Js.string "none";
-            sc##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
-            sc##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
-            sc##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
-            sc##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
+            sc##style##borderTop    <- Js.string @@ existing_border_style ~side:`Top sc;
+            sc##style##borderBottom <- Js.string @@ existing_border_style ~side:`Bottom sc;
+            sc##style##borderLeft   <- Js.string @@ existing_border_style ~side:`Left sc;
+            sc##style##borderRight  <- Js.string @@ existing_border_style ~side:`Right sc;
             sc##style##display      <- Js.string "table-cell";
             let uc = getElementById @@ id_of_cell up_c in
             selected_cell := (Some up_c);
@@ -1675,21 +1756,21 @@ let f2_prevent_default (td : tableCellElement Js.t) =
         match down_cell () with
         | None -> ()
         | Some down_c ->
-          let sc = getElementById @@ id_of_cell sel_c in
-          sc##style##display      <- Js.string "none";
-          sc##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
-          sc##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
-          sc##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
-          sc##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
-          sc##style##display      <- Js.string "table-cell";
-          let dc = getElementById @@ id_of_cell down_c in
-          selected_cell := (Some down_c);
-          dc##style##display      <- Js.string "none";
-          dc##style##borderTop    <- Js.string "3px solid black";
-          dc##style##borderBottom <- Js.string "2px solid black";
-          dc##style##borderLeft   <- Js.string "3px solid black";
-          dc##style##borderRight  <- Js.string "2px solid black";
-          dc##style##display      <- Js.string "table-cell"
+            let sc = getElementById @@ id_of_cell sel_c in
+            sc##style##display      <- Js.string "none";
+            sc##style##borderTop    <- Js.string @@ existing_border_style ~side:`Top sc;
+            sc##style##borderBottom <- Js.string @@ existing_border_style ~side:`Bottom sc;
+            sc##style##borderLeft   <- Js.string @@ existing_border_style ~side:`Left sc;
+            sc##style##borderRight  <- Js.string @@ existing_border_style ~side:`Right sc;
+            sc##style##display      <- Js.string "table-cell";
+            let dc = getElementById @@ id_of_cell down_c in
+            selected_cell := (Some down_c);
+            dc##style##display      <- Js.string "none";
+            dc##style##borderTop    <- Js.string "3px solid black";
+            dc##style##borderBottom <- Js.string "2px solid black";
+            dc##style##borderLeft   <- Js.string "3px solid black";
+            dc##style##borderRight  <- Js.string "2px solid black";
+            dc##style##display      <- Js.string "table-cell"
       )
     | Some sel_c, true -> (
         un_border_all ();
@@ -1709,21 +1790,21 @@ let f2_prevent_default (td : tableCellElement Js.t) =
         match left_cell () with
         | None -> ()
         | Some left_c ->
-          let sc = getElementById @@ id_of_cell sel_c in
-          sc##style##display      <- Js.string "none";
-          sc##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
-          sc##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
-          sc##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
-          sc##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
-          sc##style##display      <- Js.string "table-cell";
-          let lc = getElementById @@ id_of_cell left_c in
-          selected_cell := (Some left_c);
-          lc##style##display      <- Js.string "none";
-          lc##style##borderTop    <- Js.string "3px solid black";
-          lc##style##borderBottom <- Js.string "2px solid black";
-          lc##style##borderLeft   <- Js.string "3px solid black";
-          lc##style##borderRight  <- Js.string "2px solid black";
-          lc##style##display      <- Js.string "table-cell"
+            let sc = getElementById @@ id_of_cell sel_c in
+            sc##style##display      <- Js.string "none";
+            sc##style##borderTop    <- Js.string @@ existing_border_style ~side:`Top sc;
+            sc##style##borderBottom <- Js.string @@ existing_border_style ~side:`Bottom sc;
+            sc##style##borderLeft   <- Js.string @@ existing_border_style ~side:`Left sc;
+            sc##style##borderRight  <- Js.string @@ existing_border_style ~side:`Right sc;
+            sc##style##display      <- Js.string "table-cell";
+            let lc = getElementById @@ id_of_cell left_c in
+            selected_cell := (Some left_c);
+            lc##style##display      <- Js.string "none";
+            lc##style##borderTop    <- Js.string "3px solid black";
+            lc##style##borderBottom <- Js.string "2px solid black";
+            lc##style##borderLeft   <- Js.string "3px solid black";
+            lc##style##borderRight  <- Js.string "2px solid black";
+            lc##style##display      <- Js.string "table-cell"
       )
     | Some sel_c, true -> (
         un_border_all ();
@@ -1743,21 +1824,21 @@ let f2_prevent_default (td : tableCellElement Js.t) =
         match right_cell () with
         | None -> ()
         | Some right_c ->
-          let sc = getElementById @@ id_of_cell sel_c in
-          sc##style##display      <- Js.string "none";
-          sc##style##borderTop    <- Js.string "1px solid black"; (* TODO: css class? *)
-          sc##style##borderBottom <- Js.string "0px";               (* TODO: css class? *)
-          sc##style##borderLeft   <- Js.string "1px solid black"; (* TODO: css class? *)
-          sc##style##borderRight  <- Js.string "0px";               (* TODO: css class? *)
-          sc##style##display      <- Js.string "table-cell";
-          let rc = getElementById @@ id_of_cell right_c in
-          selected_cell := (Some right_c);
-          rc##style##display      <- Js.string "none";
-          rc##style##borderTop    <- Js.string "3px solid black";
-          rc##style##borderBottom <- Js.string "2px solid black";
-          rc##style##borderLeft   <- Js.string "3px solid black";
-          rc##style##borderRight  <- Js.string "2px solid black";
-          rc##style##display      <- Js.string "table-cell"
+            let sc = getElementById @@ id_of_cell sel_c in
+            sc##style##display      <- Js.string "none";
+            sc##style##borderTop    <- Js.string @@ existing_border_style ~side:`Top sc;
+            sc##style##borderBottom <- Js.string @@ existing_border_style ~side:`Bottom sc;
+            sc##style##borderLeft   <- Js.string @@ existing_border_style ~side:`Left sc;
+            sc##style##borderRight  <- Js.string @@ existing_border_style ~side:`Right sc;
+            sc##style##display      <- Js.string "table-cell";
+            let rc = getElementById @@ id_of_cell right_c in
+            selected_cell := (Some right_c);
+            rc##style##display      <- Js.string "none";
+            rc##style##borderTop    <- Js.string "3px solid black";
+            rc##style##borderBottom <- Js.string "2px solid black";
+            rc##style##borderLeft   <- Js.string "3px solid black";
+            rc##style##borderRight  <- Js.string "2px solid black";
+            rc##style##display      <- Js.string "table-cell"
       )
     | Some sel_c, true -> (
         un_border_all ();
@@ -1818,6 +1899,8 @@ let f2_prevent_default (td : tableCellElement Js.t) =
       handler (fun _ -> color_selected_area (Js.to_string clr_pkr##value); Js._true);
     appendChild div btn;
     div
+
+  (* TODO: In addition to the color picker, need to be able to change the font colors *)
 
   let color_picker () =
     let inp =
@@ -2024,6 +2107,155 @@ let f2_prevent_default (td : tableCellElement Js.t) =
     appendChild div btn;
     div
 
+  (* Border selection dropdown *)
+  (* NOTE: Only the top and left sides actually have a border *)
+  let border_dropdown () =
+    let jquery_script = createScript document in
+    jquery_script##src <-
+      Js.string "https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js";
+
+    let js_script = createScript document in
+    js_script##src <-
+      Js.string "https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js";
+
+    appendChild document##head jquery_script;
+    appendChild document##head js_script;
+
+    let div = createDiv document in
+    div##className <- Js.string "dropdown";
+    div##id <- Js.string "BorderDropdownDiv";
+
+    let btn = createButton ?_type:(Some (Js.string "button")) document in
+    btn##className <- Js.string "btn btn-default dropdown-toggle";
+    btn##id <- Js.string "BorderDropdownBtn";
+    btn##setAttribute((Js.string "data-toggle"), (Js.string "dropdown"));
+    btn##innerHTML <- Js.string "Border ";
+
+    let span = createSpan document in
+    span##className <- Js.string "caret";
+
+    let ul = createUl document in
+    ul##className <- Js.string "dropdown-menu";
+
+    let li_1 = createLi document in
+    let no_border_btn = createButton document in
+    no_border_btn##innerHTML <- Js.string "None";
+    no_border_btn##onmousedown <- handler (fun clk ->
+        if clk##button = 0
+        then (
+          border_top_row ~store:true ~style:"0px" ();
+          border_left_col ~store:true ~style:"0px" ();
+          List.iter (fun (c : cell) ->
+              match c with
+              | SingleCell sc -> (
+                  (getElementById sc.id)##style##borderTop <- Js.string "0px";
+                  update_cell_border_in_h ~side:`Top (key_of_id sc.id) "0px"
+                )
+              | MergedCell mc -> (
+                  (getElementById mc.id)##style##borderTop <- Js.string "0px";
+                  update_cell_border_in_h ~side:`Top (key_of_id mc.id) "0px"
+                )
+            ) (row_below_selected_area ());
+          List.iter (fun (c : cell) ->
+              match c with
+              | SingleCell sc -> (
+                  (getElementById sc.id)##style##borderLeft <- Js.string "0px";
+                  update_cell_border_in_h ~side:`Left (key_of_id sc.id) "0px"
+                )
+              | MergedCell mc -> (
+                  (getElementById mc.id)##style##borderLeft <- Js.string "0px";
+                  update_cell_border_in_h ~side:`Left (key_of_id mc.id) "0px"
+                )
+            ) (col_right_selected_area ());
+        )
+        else ();
+        Js._true
+      );
+
+    let li_2 = createLi document in
+    let reg_border_btn = createButton document in
+    reg_border_btn##innerHTML <- Js.string "Regular";
+    reg_border_btn##onmousedown <- handler (fun clk ->
+        if clk##button = 0
+        then (
+          border_top_row ~store:true ~style:"1px solid black" ();
+          border_left_col ~store:true ~style:"1px solid black" ();
+          List.iter (fun (c : cell) ->
+              match c with
+              | SingleCell sc -> (
+                  (getElementById sc.id)##style##borderTop <- Js.string "1px solid black";
+                  update_cell_border_in_h ~side:`Top (key_of_id sc.id) "1px solid black"
+                )
+              | MergedCell mc -> (
+                  (getElementById mc.id)##style##borderTop <- Js.string "1px solid black";
+                  update_cell_border_in_h ~side:`Top (key_of_id mc.id) "1px solid black"
+                )
+            ) (row_below_selected_area ());
+          List.iter (fun (c : cell) ->
+              match c with
+              | SingleCell sc -> (
+                  (getElementById sc.id)##style##borderLeft <- Js.string "1px solid black";
+                  update_cell_border_in_h ~side:`Left (key_of_id sc.id) "1px solid black"
+                )
+              | MergedCell mc -> (
+                  (getElementById mc.id)##style##borderLeft <- Js.string "1px solid black";
+                  update_cell_border_in_h ~side:`Left (key_of_id mc.id) "1px solid black"
+                )
+            ) (col_right_selected_area ());
+        )
+        else ();
+        Js._true
+      );
+
+    let li_3 = createLi document in
+    let thick_border_btn = createButton document in
+    thick_border_btn##innerHTML <- Js.string "Thick";
+    thick_border_btn##onmousedown <- handler (fun clk ->
+        if clk##button = 0
+        then (
+          border_top_row ~store:true ~style:"2px solid black" ();
+          border_left_col ~store:true ~style:"2px solid black" ();
+          List.iter (fun (c : cell) ->
+              match c with
+              | SingleCell sc -> (
+                  (getElementById sc.id)##style##borderTop <- Js.string "2px solid black";
+                  update_cell_border_in_h ~side:`Top (key_of_id sc.id) "2px solid black"
+                )
+              | MergedCell mc -> (
+                  (getElementById mc.id)##style##borderTop <- Js.string "2px solid black";
+                  update_cell_border_in_h ~side:`Top (key_of_id mc.id) "2px solid black"
+                )
+            ) (row_below_selected_area ());
+          List.iter (fun (c : cell) ->
+              match c with
+              | SingleCell sc -> (
+                  (getElementById sc.id)##style##borderLeft <- Js.string "2px solid black";
+                  update_cell_border_in_h ~side:`Left (key_of_id sc.id) "2px solid black"
+                )
+              | MergedCell mc -> (
+                  (getElementById mc.id)##style##borderLeft <- Js.string "2px solid black";
+                  update_cell_border_in_h ~side:`Left (key_of_id mc.id) "2px solid black"
+                )
+            ) (col_right_selected_area ());
+        )
+        else ();
+        Js._true
+      );
+
+    appendChild li_1 no_border_btn;
+    appendChild ul li_1;
+
+    appendChild li_2 reg_border_btn;
+    appendChild ul li_2;
+
+    appendChild li_3 thick_border_btn;
+    appendChild ul li_3;
+
+    appendChild btn span;
+    appendChild div btn;
+    appendChild div ul;
+    div
+
   (* Toolbar with Buttons *)
   let toolbar ?username ?sheet_name () =
     let toolbar = createDiv document in
@@ -2042,6 +2274,7 @@ let f2_prevent_default (td : tableCellElement Js.t) =
     appendChild toolbar (left_align_text_button ());
     appendChild toolbar (center_text_button ());
     appendChild toolbar (right_align_text_button ());
+    appendChild toolbar (border_dropdown ());
     toolbar
 
   (* Create a new & empty cell *)
@@ -2059,7 +2292,7 @@ let f2_prevent_default (td : tableCellElement Js.t) =
     td##style##borderLeft      <- Js.string "1px solid black"; (* TODO: Put in a css class? *)
     td##style##borderRight     <- Js.string "0px";               (* TODO: Put in a css class? *)
     td##id                     <- Js.string id;
-    td##onkeyup                <- f2_handler td;
+    (*td##onkeyup                <- f2_handler td;*)
     td##ondblclick             <- dbl_click_handler td;
     td##onmousedown            <- click_handler td;
     td

@@ -21,22 +21,26 @@
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ];
     match !selected_area with
@@ -51,7 +55,7 @@
   let clear_all () =
     selected_cell  := None;
     shift_pressed  := false;
-    selected_area     := None
+    selected_area  := None
 
   (*** Define Tests ***)
 
@@ -86,7 +90,8 @@
       pass = (cell_of_id "2_3") = Some (SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
       });
       msg  = "No Msg"
     }
@@ -96,28 +101,33 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
     ];
     let top_row =
@@ -125,12 +135,14 @@
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ]
     in
@@ -145,28 +157,33 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
     ];
     let bottom_row =
@@ -174,12 +191,14 @@
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ]
     in
@@ -194,28 +213,33 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
     ];
     let left_col =
@@ -223,12 +247,14 @@
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ]
     in
@@ -243,28 +269,33 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
     ];
     let right_col =
@@ -272,12 +303,14 @@
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ]
     in
@@ -292,28 +325,33 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
     ];
     let row_above =
@@ -321,12 +359,14 @@
         SingleCell {
           row = 1; col = 3; id = "1_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 1; col = 2; id = "1_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ]
     in
@@ -345,28 +385,33 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-        border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
     ];
     let row_below =
@@ -374,12 +419,14 @@
         SingleCell {
           row = 4; col = 3; id = "4_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 4; col = 2; id = "4_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ]
     in
@@ -398,28 +445,33 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
     ];
     let col_left =
@@ -427,12 +479,14 @@
         SingleCell {
           row = 3; col = 1; id = "3_1";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 1; id = "2_1";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ]
     in
@@ -451,28 +505,33 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
     ];
     let col_right =
@@ -480,12 +539,14 @@
         SingleCell {
           row = 3; col = 4; id = "3_4";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 4; id = "2_4";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ]
     in
@@ -504,24 +565,28 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       }];
     let new_selected_area =
       Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ];
     in
@@ -542,28 +607,33 @@
     selected_cell := Some (SingleCell {
         row = 3; col = 2; id = "3_2";
         txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ];
     let new_selected_area =
@@ -571,32 +641,38 @@
         SingleCell {
           row = 1; col = 3; id = "1_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 1; col = 2; id = "1_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ];
     in
@@ -617,28 +693,33 @@
     selected_cell := Some (SingleCell {
         row = 2; col = 2; id = "2_2";
         txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     selected_area := Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 3; id = "3_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ];
     let new_selected_area =
@@ -646,12 +727,14 @@
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 3; id = "2_3";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ];
     in
@@ -673,7 +756,8 @@
       Some (SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-          border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         });
     shift_pressed_action ();
     let b1 = (!shift_pressed = true) in
@@ -682,7 +766,8 @@
        Some [SingleCell {
            row = 3; col = 2; id = "3_2";
            txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+           text_align = ""; font_weight = ""; font_style = ""
          }])
     in
     let msg =
@@ -702,7 +787,8 @@
       Some (SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         });
     shift_pressed := false;
     up_arrow_action ();
@@ -711,7 +797,8 @@
        Some (SingleCell {
            row = 2; col = 2; id = "2_2";
            txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+           text_align = ""; font_weight = ""; font_style = ""
          }))
     in
     let b2 = (!selected_area    = None) in
@@ -731,7 +818,8 @@ let up_arrow_action_test_2 () =
       Some (SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         });
     shift_pressed := true;
     (**) print_selected_area ();
@@ -742,19 +830,22 @@ let up_arrow_action_test_2 () =
        Some (SingleCell {
            row = 3; col = 2; id = "3_2";
            txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+           text_align = ""; font_weight = ""; font_style = ""
          }))
     in
     let b2 = (!selected_area = Some [
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         }
       ])
     in
@@ -776,7 +867,8 @@ let up_arrow_action_test_2 () =
         txt_in = "";
         txt = "";
         color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+        border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+        text_align = ""; font_weight = ""; font_style = ""
       });
     shift_pressed := true;
     up_arrow_action ();
@@ -789,24 +881,28 @@ let up_arrow_action_test_2 () =
            txt_in = "";
            txt = "";
            color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+           border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+           text_align = ""; font_weight = ""; font_style = ""
          }))
     in
     let b2 = (!selected_area = Some [
         SingleCell {
           row = 1; col = 2; id = "1_2";
           txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 2; col = 2; id = "2_2";
           txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
         SingleCell {
           row = 3; col = 2; id = "3_2";
           txt_in = ""; txt = ""; color = "";
-           border_top = ""; border_bottom = ""; border_left = ""; border_right = ""
+          border_top = ""; border_bottom = ""; border_left = ""; border_right = "";
+          text_align = ""; font_weight = ""; font_style = ""
         };
       ])
     in

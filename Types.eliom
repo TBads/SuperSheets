@@ -22,31 +22,37 @@ let user_info =
   (*  text shown in the cell. These will be different if the user has typed in a formula.      *)
   (*  Ex. If txt_in = "=max(3,5)" then txt = "5"                                               *)
   type single_cell = {
-    row    : int;
-    col    : int;
-    id     : string;
-    txt_in : string;
-    txt    : string;
-    color  : string;
-    border_top : string;
+    row           : int;
+    col           : int;
+    id            : string;
+    txt_in        : string;
+    txt           : string;
+    color         : string;
+    border_top    : string;
     border_bottom : string;
-    border_left : string;
-    border_right : string
+    border_left   : string;
+    border_right  : string;
+    text_align    : string;
+    font_weight   : string;
+    font_style    : string
   }
 
   type merged_cell = {
-    top_row    : int;
-    bottom_row : int;
-    left_col   : int;
-    right_col  : int;
-    id         : string;
-    txt_in     : string;
-    txt        : string;
-    color      : string;
-    border_top : string;
+    top_row       : int;
+    bottom_row    : int;
+    left_col      : int;
+    right_col     : int;
+    id            : string;
+    txt_in        : string;
+    txt           : string;
+    color         : string;
+    border_top    : string;
     border_bottom : string;
-    border_left : string;
-    border_right : string
+    border_left   : string;
+    border_right  : string;
+    text_align    : string;
+    font_weight   : string;
+    font_style    : string
   }
 
   type cell = SingleCell of single_cell | MergedCell of merged_cell

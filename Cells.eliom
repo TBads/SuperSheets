@@ -82,10 +82,13 @@
       "\n  txt_in = " ^ sc.txt_in ^ ";" ^
       "\n  txt    = " ^ sc.txt ^ ";" ^
       "\n  color  = " ^ sc.color ^ ";" ^
-      "\n  border_top  = " ^ sc.border_top ^ ";" ^
-      "\n  border_bottom  = " ^ sc.border_bottom ^ ";" ^
-      "\n  border_left  = " ^ sc.border_left ^ ";" ^
-      "\n  border_right  = " ^ sc.border_right ^
+      "\n  border_top = " ^ sc.border_top ^ ";" ^
+      "\n  border_bottom = " ^ sc.border_bottom ^ ";" ^
+      "\n  border_left = " ^ sc.border_left ^ ";" ^
+      "\n  border_right = " ^ sc.border_right ^ ";" ^
+      "\n  text_align = " ^ sc.text_align ^ ";" ^
+      "\n  font_weight = " ^ sc.font_weight ^ ";" ^
+      "\n  font_style = " ^ sc.font_style ^
       "\n}"
     | MergedCell mc -> (
         "\n{" ^
@@ -100,7 +103,10 @@
         "\n  border_top  = " ^ mc.border_top ^ ";" ^
         "\n  border_bottom  = " ^ mc.border_bottom ^ ";" ^
         "\n  border_left  = " ^ mc.border_left ^ ";" ^
-        "\n  border_right  = " ^ mc.border_right ^
+        "\n  border_right  = " ^ mc.border_right ^ ";" ^
+        "\n  text_align = " ^ mc.text_align ^ ";" ^
+        "\n  font_weight = " ^ mc.font_weight ^ ";" ^
+        "\n  font_style = " ^ mc.font_style ^
         "\n}"
       )
 
@@ -195,30 +201,36 @@
       let c_num = col_of_id real_id in
       match cs * rs with
       | 1 -> Some (SingleCell {
-          row    = r_num;
-          col    = c_num;
-          id     = real_id;
-          txt_in = ""; (* TODO *)
-          txt    = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "");
-          color  = Js.to_string (c##style##backgroundColor);
-          border_top = Js.to_string (c##style##borderTop);
+          row           = r_num;
+          col           = c_num;
+          id            = real_id;
+          txt_in        = ""; (* TODO *)
+          txt           = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "");
+          color         = Js.to_string (c##style##backgroundColor);
+          border_top    = Js.to_string (c##style##borderTop);
           border_bottom = Js.to_string (c##style##borderBottom);
-          border_left = Js.to_string (c##style##borderLeft);
-          border_right = Js.to_string (c##style##borderRight)
+          border_left   = Js.to_string (c##style##borderLeft);
+          border_right  = Js.to_string (c##style##borderRight);
+          text_align    = Js.to_string (c##style##textAlign);
+          font_weight   = Js.to_string (c##style##fontWeight);
+          font_style    = Js.to_string (c##style##fontStyle)
         })
       | _ -> Some (MergedCell {
-          top_row    = r_num;
-          bottom_row = r_num + rs - 1;
-          left_col   = c_num;
-          right_col  = c_num + cs - 1;
-          id         = real_id;
-          txt_in     = ""; (* TODO *)
-          txt        = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "");
-          color      = Js.to_string (c##style##backgroundColor);
-          border_top = Js.to_string (c##style##borderTop);
+          top_row       = r_num;
+          bottom_row    = r_num + rs - 1;
+          left_col      = c_num;
+          right_col     = c_num + cs - 1;
+          id            = real_id;
+          txt_in        = ""; (* TODO *)
+          txt           = Js.to_string @@ Js.Opt.get (c##textContent) (fun () -> Js.string "");
+          color         = Js.to_string (c##style##backgroundColor);
+          border_top    = Js.to_string (c##style##borderTop);
           border_bottom = Js.to_string (c##style##borderBottom);
-          border_left = Js.to_string (c##style##borderLeft);
-          border_right = Js.to_string (c##style##borderRight)
+          border_left   = Js.to_string (c##style##borderLeft);
+          border_right  = Js.to_string (c##style##borderRight);
+          text_align    = Js.to_string (c##style##textAlign);
+          font_weight   = Js.to_string (c##style##fontWeight);
+          font_style    = Js.to_string (c##style##fontStyle)
         })
     with _ -> None (* TODO: Log/Handle specific errors here *)
 
@@ -316,6 +328,9 @@
     ~border_bottom
     ~border_left
     ~border_right
+    ~text_align
+    ~font_weight
+    ~font_style
     txt =
     let bot_row = top_row + height - 1 in
     let right_col = left_col + width - 1 in
@@ -331,7 +346,10 @@
         border_top = border_top;
         border_bottom = border_bottom;
         border_left = border_left;
-        border_right = border_right
+        border_right = border_right;
+        text_align = text_align;
+        font_weight = font_weight;
+        font_style = font_style
     })
 
   (* Update the text fields in a cell residing in h *)
@@ -342,46 +360,55 @@
       let new_cell =
         match old_cell with
         | SingleCell sc -> SingleCell {
-            row    = sc.row;
-            col    = sc.row;
-            id     = sc.id;
-            txt_in = txt;
-            txt    = Formulas.eval_string txt;
-            color  = sc.color;
-            border_top = sc.border_top;
+            row           = sc.row;
+            col           = sc.row;
+            id            = sc.id;
+            txt_in        = txt;
+            txt           = Formulas.eval_string txt;
+            color         = sc.color;
+            border_top    = sc.border_top;
             border_bottom = sc.border_bottom;
-            border_left = sc.border_left;
-            border_right = sc.border_right
+            border_left   = sc.border_left;
+            border_right  = sc.border_right;
+            text_align    = sc.text_align;
+            font_weight   = sc.font_weight;
+            font_style    = sc.font_style
           }
         | MergedCell mc -> MergedCell {
-            top_row    = mc.top_row;
-            bottom_row = mc.bottom_row;
-            left_col   = mc.left_col;
-            right_col  = mc.right_col;
-            id         = mc.id;
-            txt_in     = txt;
-            txt        = Formulas.eval_string txt;
-            color      = mc.color;
-            border_top = mc.border_top;
+            top_row       = mc.top_row;
+            bottom_row    = mc.bottom_row;
+            left_col      = mc.left_col;
+            right_col     = mc.right_col;
+            id            = mc.id;
+            txt_in        = txt;
+            txt           = Formulas.eval_string txt;
+            color         = mc.color;
+            border_top    = mc.border_top;
             border_bottom = mc.border_bottom;
-            border_left = mc.border_left;
-            border_right = mc.border_right
+            border_left   = mc.border_left;
+            border_right  = mc.border_right;
+            text_align    = mc.text_align;
+            font_weight   = mc.font_weight;
+            font_style    = mc.font_style
           }
       in
       Hashtbl.replace h key new_cell
     )
     else (
       store_cell key (SingleCell {
-          row    = fst key;
-          col    = snd key;
-          id     = id_of_key (fst key) (snd key);
-          txt_in = txt;
-          txt    = Formulas.eval_string txt;
-          color  = cell_background_color; (* TODO: should get from DOM *)
-          border_top = ""; (* TODO: should get from DOM *)
+          row           = fst key;
+          col           = snd key;
+          id            = id_of_key (fst key) (snd key);
+          txt_in        = txt;
+          txt           = Formulas.eval_string txt;
+          color         = cell_background_color; (* TODO: should get from DOM *)
+          border_top    = "";    (* TODO: should get from DOM *)
           border_bottom = ""; (* TODO: should get from DOM *)
-          border_left = ""; (* TODO: should get from DOM *)
-          border_right = "" (* TODO: should get from DOM *)
+          border_left   = "";   (* TODO: should get from DOM *)
+          border_right  = "";  (* TODO: should get from DOM *)
+          text_align    = "initial";
+          font_weight   = "";
+          font_style    = ""
       })
     )
 
@@ -393,46 +420,55 @@
       let new_cell =
         match old_cell with
         | SingleCell sc -> SingleCell {
-            row    = sc.row;
-            col    = sc.row;
-            id     = sc.id;
-            txt_in = sc.txt_in;
-            txt    = sc.txt;
-            color  = new_color;
-            border_top = sc.border_top;
+            row           = sc.row;
+            col           = sc.row;
+            id            = sc.id;
+            txt_in        = sc.txt_in;
+            txt           = sc.txt;
+            color         = new_color;
+            border_top    = sc.border_top;
             border_bottom = sc.border_bottom;
-            border_left = sc.border_left;
-            border_right = sc.border_right;
+            border_left   = sc.border_left;
+            border_right  = sc.border_right;
+            text_align    = sc.text_align;
+            font_weight   = sc.font_weight;
+            font_style    = sc.font_style
           }
         | MergedCell mc -> MergedCell {
-            top_row    = mc.top_row;
-            bottom_row = mc.bottom_row;
-            left_col   = mc.left_col;
-            right_col  = mc.right_col;
-            id         = mc.id;
-            txt_in     = mc.txt_in;
-            txt        = mc.txt;
-            color      = new_color;
-            border_top = mc.border_top;
+            top_row       = mc.top_row;
+            bottom_row    = mc.bottom_row;
+            left_col      = mc.left_col;
+            right_col     = mc.right_col;
+            id            = mc.id;
+            txt_in        = mc.txt_in;
+            txt           = mc.txt;
+            color         = new_color;
+            border_top    = mc.border_top;
             border_bottom = mc.border_bottom;
-            border_left = mc.border_left;
-            border_right = mc.border_right;
+            border_left   = mc.border_left;
+            border_right  = mc.border_right;
+            text_align    = mc.text_align;
+            font_weight   = mc.font_weight;
+            font_style    = mc.font_style
           }
       in
       Hashtbl.replace h key new_cell
     )
     else (
       store_cell key (SingleCell {
-          row    = fst key;
-          col    = snd key;
-          id     = id_of_key (fst key) (snd key);
-          txt_in = "";
-          txt    = "";
-          color  = new_color;
-          border_top = "";
+          row           = fst key;
+          col           = snd key;
+          id            = id_of_key (fst key) (snd key);
+          txt_in        = "";
+          txt           = "";
+          color         = new_color;
+          border_top    = "";
           border_bottom = "";
-          border_left = "";
-          border_right = "";
+          border_left   = "";
+          border_right  = "";
+          text_align    = "initial";
+          font_weight   = "";
+          font_style    = ""
       })
     )
 
@@ -454,7 +490,10 @@
               border_top    = if side = `Top then border else sc.border_top;
               border_bottom = if side = `Bottom then border else sc.border_bottom;
               border_left   = if side = `Left then border else sc.border_left;
-              border_right  = if side = `Right then border else sc.border_right
+              border_right  = if side = `Right then border else sc.border_right;
+              text_align    = sc.text_align;
+              font_weight   = sc.font_weight;
+              font_style    = sc.font_style
             }
         | MergedCell mc -> MergedCell {
               top_row       = mc.top_row;
@@ -469,6 +508,9 @@
               border_bottom = if side = `Bottom then border else mc.border_bottom;
               border_left   = if side = `Left then border else mc.border_left;
               border_right  = if side = `Right then border else mc.border_right;
+              text_align    = mc.text_align;
+              font_weight   = mc.font_weight;
+              font_style    = mc.font_style
             }
         in
         Hashtbl.replace h key new_cell
@@ -485,6 +527,192 @@
           border_bottom = if side = `Bottom then border else "";
           border_left   = if side = `Left then border else "1px solid black";
           border_right  = if side = `Right then border else "";
+          text_align    = "initial";
+          font_weight   = "";
+          font_style    = ""
+      })
+    )
+
+  let update_cell_text_align_in_h (key : int * int) (text_align : string) =
+    ignore @@ %shell_print "\nupdate_cell_text_align_in_h:\n";
+    ignore @@ %shell_print ("   key = "^(string_of_int @@ fst key)^", "^(string_of_int @@ snd key));
+    if Hashtbl.mem h key
+    then (
+      let old_cell = Hashtbl.find h key in
+      let new_cell =
+        match old_cell with
+        | SingleCell sc  -> SingleCell {
+              row           = sc.row;
+              col           = sc.row;
+              id            = sc.id;
+              txt_in        = sc.txt_in;
+              txt           = sc.txt;
+              color         = sc.color;
+              border_top    = sc.border_top;
+              border_bottom = sc.border_bottom;
+              border_left   = sc.border_left;
+              border_right  = sc.border_right;
+              text_align    = text_align;
+              font_weight   = sc.font_weight;
+              font_style    = sc.font_style
+            }
+        | MergedCell mc -> MergedCell {
+              top_row       = mc.top_row;
+              bottom_row    = mc.bottom_row;
+              left_col      = mc.left_col;
+              right_col     = mc.right_col;
+              id            = mc.id;
+              txt_in        = mc.txt_in;
+              txt           = mc.txt;
+              color         = mc.color;
+              border_top    = mc.border_top;
+              border_bottom = mc.border_bottom;
+              border_left   = mc.border_left;
+              border_right  = mc.border_right;
+              text_align    = text_align;
+              font_weight   = mc.font_weight;
+              font_style    = mc.font_style
+            }
+        in
+        Hashtbl.replace h key new_cell
+    )
+    else (
+      store_cell key (SingleCell {
+          row           = fst key;
+          col           = snd key;
+          id            = id_of_key (fst key) (snd key);
+          txt_in        = "";
+          txt           = "";
+          color         = cell_background_color;
+          border_top    = "1px solid black";
+          border_bottom = "";
+          border_left   = "1px solid black";
+          border_right  = "";
+          text_align    = text_align;
+          font_weight   = "";
+          font_style    = ""
+      })
+    )
+
+  let update_cell_font_weight_in_h (key : int * int) (font_weight : string) =
+    ignore @@ %shell_print "\nupdate_cell_font_weight_in_h:\n";
+    ignore @@ %shell_print ("   key = "^(string_of_int @@ fst key)^", "^(string_of_int @@ snd key));
+    if Hashtbl.mem h key
+    then (
+      let old_cell = Hashtbl.find h key in
+      let new_cell =
+        match old_cell with
+        | SingleCell sc  -> SingleCell {
+              row           = sc.row;
+              col           = sc.row;
+              id            = sc.id;
+              txt_in        = sc.txt_in;
+              txt           = sc.txt;
+              color         = sc.color;
+              border_top    = sc.border_top;
+              border_bottom = sc.border_bottom;
+              border_left   = sc.border_left;
+              border_right  = sc.border_right;
+              text_align    = sc.text_align;
+              font_weight   = font_weight;
+              font_style    = sc.font_style
+            }
+        | MergedCell mc -> MergedCell {
+              top_row       = mc.top_row;
+              bottom_row    = mc.bottom_row;
+              left_col      = mc.left_col;
+              right_col     = mc.right_col;
+              id            = mc.id;
+              txt_in        = mc.txt_in;
+              txt           = mc.txt;
+              color         = mc.color;
+              border_top    = mc.border_top;
+              border_bottom = mc.border_bottom;
+              border_left   = mc.border_left;
+              border_right  = mc.border_right;
+              text_align    = mc.text_align;
+              font_weight   = font_weight;
+              font_style    = mc.font_style
+            }
+        in
+        Hashtbl.replace h key new_cell
+    )
+    else (
+      store_cell key (SingleCell {
+          row           = fst key;
+          col           = snd key;
+          id            = id_of_key (fst key) (snd key);
+          txt_in        = "";
+          txt           = "";
+          color         = cell_background_color;
+          border_top    = "1px solid black";
+          border_bottom = "";
+          border_left   = "1px solid black";
+          border_right  = "";
+          text_align    = "center";
+          font_weight   = "normal";
+          font_style    = "normal"
+      })
+    )
+
+  let update_cell_font_style_in_h (key : int * int) (font_style : string) =
+    ignore @@ %shell_print "\nupdate_cell_font_style_in_h:\n";
+    ignore @@ %shell_print ("   key = "^(string_of_int @@ fst key)^", "^(string_of_int @@ snd key));
+    if Hashtbl.mem h key
+    then (
+      let old_cell = Hashtbl.find h key in
+      let new_cell =
+        match old_cell with
+        | SingleCell sc  -> SingleCell {
+              row           = sc.row;
+              col           = sc.row;
+              id            = sc.id;
+              txt_in        = sc.txt_in;
+              txt           = sc.txt;
+              color         = sc.color;
+              border_top    = sc.border_top;
+              border_bottom = sc.border_bottom;
+              border_left   = sc.border_left;
+              border_right  = sc.border_right;
+              text_align    = sc.text_align;
+              font_weight   = sc.font_weight;
+              font_style    = font_style
+            }
+        | MergedCell mc -> MergedCell {
+              top_row       = mc.top_row;
+              bottom_row    = mc.bottom_row;
+              left_col      = mc.left_col;
+              right_col     = mc.right_col;
+              id            = mc.id;
+              txt_in        = mc.txt_in;
+              txt           = mc.txt;
+              color         = mc.color;
+              border_top    = mc.border_top;
+              border_bottom = mc.border_bottom;
+              border_left   = mc.border_left;
+              border_right  = mc.border_right;
+              text_align    = mc.text_align;
+              font_weight   = mc.font_weight;
+              font_style    = font_style
+            }
+        in
+        Hashtbl.replace h key new_cell
+    )
+    else (
+      store_cell key (SingleCell {
+          row           = fst key;
+          col           = snd key;
+          id            = id_of_key (fst key) (snd key);
+          txt_in        = "";
+          txt           = "";
+          color         = cell_background_color;
+          border_top    = "1px solid black";
+          border_bottom = "";
+          border_left   = "1px solid black";
+          border_right  = "";
+          text_align    = "center";
+          font_weight   = "normal";
+          font_style    = "normal"
       })
     )
 
@@ -503,7 +731,10 @@
            "\"border_top\" : \"" ^ sc.border_top ^ "\"," ^
            "\"border_bottom\" : \"" ^ sc.border_bottom ^ "\"," ^
            "\"border_left\" : \"" ^ sc.border_left ^ "\"," ^
-           "\"border_right\" : \"" ^ sc.border_right ^ "\"" ^
+           "\"border_right\" : \"" ^ sc.border_right ^ "\"," ^
+           "\"text_align\" : \"" ^ sc.text_align ^ "\"," ^
+           "\"font_weight\" : \"" ^ sc.font_weight ^ "\"," ^
+           "\"font_style\" : \"" ^ sc.font_style ^ "\"" ^
          "}")
      | MergedCell mc ->
          "\"MergedCell\" : {" ^
@@ -518,37 +749,46 @@
           "\"border_top\" : \"" ^ mc.border_top ^ "\"," ^
           "\"border_bottom\" : \"" ^ mc.border_bottom ^ "\"," ^
           "\"border_left\" : \"" ^ mc.border_left ^ "\"," ^
-          "\"border_right\" : \"" ^ mc.border_right ^ "\"" ^
+          "\"border_right\" : \"" ^ mc.border_right ^ "\"," ^
+          "\"text_align\" : \"" ^ mc.text_align ^ "\"," ^
+          "\"font_weight\" : \"" ^ mc.font_weight ^ "\"," ^
+          "\"font_style\" : \"" ^ mc.font_style ^ "\"" ^
         "}"
 
   let cell_of_json ((s, j) : string * Yojson.Basic.json) =
     let open Yojson.Basic.Util in
     match s with
     | "SingleCell" -> SingleCell {
-        row    = to_int @@ member "row" j;
-        col    = to_int @@ member "col" j;
-        id     = to_string @@ member "id" j;
-        txt_in = to_string @@ member "txt_in" j;
-        txt    = to_string @@ member "txt" j;
-        color  = to_string @@ member "color" j;
-        border_top = to_string @@ member "border_top" j;
+        row           = to_int @@ member "row" j;
+        col           = to_int @@ member "col" j;
+        id            = to_string @@ member "id" j;
+        txt_in        = to_string @@ member "txt_in" j;
+        txt           = to_string @@ member "txt" j;
+        color         = to_string @@ member "color" j;
+        border_top    = to_string @@ member "border_top" j;
         border_bottom = to_string @@ member "border_bottom" j;
-        border_left = to_string @@ member "border_left" j;
-        border_right = to_string @@ member "border_right" j;
+        border_left   = to_string @@ member "border_left" j;
+        border_right  = to_string @@ member "border_right" j;
+        text_align    = to_string @@ member "text_align" j;
+        font_weight   = to_string @@ member "font_weight" j;
+        font_style    = to_string @@ member "font_style" j
       }
     | "MergedCell" -> MergedCell {
-        top_row    = to_int @@ member "top_row" j;
-        bottom_row = to_int @@ member "bottom_row" j;
-        left_col   = to_int @@ member "left_col" j;
-        right_col  = to_int @@ member "right_col" j;
-        id         = to_string @@ member "id" j;
-        txt_in     = to_string @@ member "txt_in" j;
-        txt        = to_string @@ member "txt" j;
-        color      = to_string @@ member "color" j;
-        border_top = to_string @@ member "border_top" j;
+        top_row       = to_int @@ member "top_row" j;
+        bottom_row    = to_int @@ member "bottom_row" j;
+        left_col      = to_int @@ member "left_col" j;
+        right_col     = to_int @@ member "right_col" j;
+        id            = to_string @@ member "id" j;
+        txt_in        = to_string @@ member "txt_in" j;
+        txt           = to_string @@ member "txt" j;
+        color         = to_string @@ member "color" j;
+        border_top    = to_string @@ member "border_top" j;
         border_bottom = to_string @@ member "border_bottom" j;
-        border_left = to_string @@ member "border_left" j;
-        border_right = to_string @@ member "border_right" j;
+        border_left   = to_string @@ member "border_left" j;
+        border_right  = to_string @@ member "border_right" j;
+        text_align    = to_string @@ member "text_align" j;
+        font_weight   = to_string @@ member "font_weight" j;
+        font_style    = to_string @@ member "font_style" j
       }
     | _ -> (
         ignore @@ %shell_print "Error: Reveived bad json!";
@@ -573,16 +813,11 @@
       |> List.map cell_of_json
       |> List.iter (fun c -> ignore @@ %shell_print @@ string_of_cell c)
     in*)
-    ignore @@ %shell_print "\n\nparse_ss_string *** Point 0 ***\n";
     ignore @@ %shell_print ("\n\nss_string =\n" ^ ss_string);
     let point_1 = Yojson.Basic.from_string ss_string in
-    ignore @@ %shell_print "\n\nparse_ss_string *** Point 1 ***\n";
     let point_2 = Yojson.Basic.Util.to_assoc point_1 in
-    ignore @@ %shell_print "\n\nparse_ss_string *** Point 2 ***\n";
     let point_3 = List.map cell_of_json point_2 in
-    ignore @@ %shell_print "\n\nparse_ss_string *** Point 3 ***\n";
     List.iter (fun c -> ignore @@ %shell_print @@ string_of_cell c) point_3;
-    ignore @@ %shell_print "\n\nparse_ss_string *** Point 4 ***\n";
     Yojson.Basic.from_string ss_string
     |> Yojson.Basic.Util.to_assoc
     |> List.map cell_of_json
@@ -802,7 +1037,6 @@
             td##style##borderRight  <- Js.string "2px solid black"
           )
         | Some sel_c, true -> (
-            let c = getElementById @@ id_of_cell sel_c in
             selected_cell := cell_of_id (Js.to_string td##id);
             td##style##borderTop    <- Js.string "3px solid black";
             td##style##borderBottom <- Js.string "2px solid black";
@@ -940,6 +1174,9 @@
                   ~border_bottom:""
                   ~border_left:""
                   ~border_right:""
+                  ~text_align:"initial"
+                  ~font_weight:"initial" (* TODO: get from DOM? *)
+                  ~font_style:"initial" (* TODO: get from DOM? *)
                   ""
               else ();
               replaceChild tr new_td old_td;
@@ -1003,19 +1240,32 @@
         )
         else window##alert (Js.string "Not all cells selected are single cells!")
 
+  (* TODO: Update this to account for cell borders, font weight, text-align *)
   let update_td (rc : int * int) c =
     match c with
     | SingleCell sc -> (
         try
           let td = getElementById sc.id in
-          td##textContent <- (Js.some @@ Js.string sc.txt)
+          td##textContent            <- (Js.some @@ Js.string sc.txt);
+          td##style##backgroundColor <- Js.string sc.color;
+          td##style##borderTop       <- Js.string sc.border_top;
+          td##style##borderLeft      <- Js.string sc.border_left;
+          td##style##textAlign       <- Js.string sc.text_align;
+          td##style##fontWeight      <- Js.string sc.font_weight;
+          td##style##fontStyle       <- Js.string sc.font_style
         with _ -> ()
       )
     | MergedCell mc ->
       try
         render_merged_cell mc;
         let td = getElementById mc.id in
-        td##textContent <- (Js.some @@ Js.string (mc.txt))
+        td##textContent            <- (Js.some @@ Js.string (mc.txt));
+        td##style##backgroundColor <- Js.string mc.color;
+        td##style##borderTop       <- Js.string mc.border_top;
+        td##style##borderLeft      <- Js.string mc.border_left;
+        td##style##textAlign       <- Js.string mc.text_align;
+        td##style##fontWeight      <- Js.string mc.font_weight;
+        td##style##fontStyle       <- Js.string mc.font_style
       with _ -> ()
 
   (* Update the DOM with spreadsheet data loaded from disc *)
@@ -1921,26 +2171,38 @@ let border_bottom_row ?(style = "1px solid black") () =
         match !selected_area, !selected_cell with
         | None, None -> Js._true
         | None, Some sel_c -> (
-              let td =
+              let td, td_id =
                 match sel_c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##fontWeight = Js.string "bold"
-              then td##style##fontWeight <- Js.string "normal"
-              else td##style##fontWeight <- Js.string "bold";
+              then (
+                td##style##fontWeight <- Js.string "normal";
+                update_cell_font_weight_in_h (key_of_id td_id) "normal"
+              )
+              else (
+                td##style##fontWeight <- Js.string "bold";
+                update_cell_font_weight_in_h (key_of_id td_id) "bold"
+              );
               Js._true
           )
         | Some sa, _ -> (
             List.iter (fun (c : cell) ->
-              let td =
+              let td, td_id =
                 match c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##fontWeight = Js.string "bold"
-              then td##style##fontWeight <- Js.string "normal"
-              else td##style##fontWeight <- Js.string "bold"
+              then (
+                td##style##fontWeight <- Js.string "normal";
+                update_cell_font_weight_in_h (key_of_id td_id) "normal"
+              )
+              else (
+                td##style##fontWeight <- Js.string "bold";
+                update_cell_font_weight_in_h (key_of_id td_id) "bold"
+              )
             ) sa;
           Js._true
           )
@@ -1959,26 +2221,38 @@ let border_bottom_row ?(style = "1px solid black") () =
         match !selected_area, !selected_cell with
         | None, None -> Js._true
         | None, Some sel_c -> (
-              let td =
+              let td, td_id =
                 match sel_c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##fontStyle = Js.string "italic"
-              then td##style##fontStyle <- Js.string "normal"
-              else td##style##fontStyle <- Js.string "italic";
+              then (
+                td##style##fontStyle <- Js.string "normal";
+                update_cell_font_style_in_h (key_of_id td_id) "normal"
+              )
+              else (
+                td##style##fontStyle <- Js.string "italic";
+                update_cell_font_style_in_h (key_of_id td_id) "italic"
+              );
               Js._true
           )
         | Some sa, _ -> (
             List.iter (fun (c : cell) ->
-              let td =
+              let td, td_id =
                 match c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##fontStyle = Js.string "italic"
-              then td##style##fontStyle <- Js.string "normal"
-              else td##style##fontStyle <- Js.string "italic"
+              then (
+                td##style##fontStyle <- Js.string "normal";
+                update_cell_font_style_in_h (key_of_id td_id) "normal"
+              )
+              else (
+                td##style##fontStyle <- Js.string "italic";
+                update_cell_font_style_in_h (key_of_id td_id) "italic"
+              )
             ) sa;
           Js._true
           )
@@ -1986,7 +2260,6 @@ let border_bottom_row ?(style = "1px solid black") () =
     appendChild div btn;
     div
 
-  (* TODO: Copy this function for align left, justify and align right *)
   (* Center the text *)
   let center_text_button () =
     let div = createDiv document in
@@ -1998,26 +2271,38 @@ let border_bottom_row ?(style = "1px solid black") () =
         match !selected_area, !selected_cell with
         | None, None -> Js._true
         | None, Some sel_c -> (
-              let td =
+              let td, td_id =
                 match sel_c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##textAlign = Js.string "center"
-              then td##style##textAlign <- Js.string "initial"
-              else td##style##textAlign <- Js.string "center";
+              then (
+                td##style##textAlign <- Js.string "initial";
+                update_cell_text_align_in_h (key_of_id td_id) "initial"
+              )
+              else (
+                td##style##textAlign <- Js.string "center";
+                update_cell_text_align_in_h (key_of_id td_id) "center"
+              );
               Js._true
           )
         | Some sa, _ -> (
             List.iter (fun (c : cell) ->
-              let td =
+              let td, td_id =
                 match c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##textAlign = Js.string "center"
-              then td##style##textAlign <- Js.string "initial"
-              else td##style##textAlign <- Js.string "center"
+              then (
+                td##style##textAlign <- Js.string "initial";
+                update_cell_text_align_in_h (key_of_id td_id) "initial"
+              )
+              else (
+                td##style##textAlign <- Js.string "center";
+                update_cell_text_align_in_h (key_of_id td_id) "center"
+              )
             ) sa;
           Js._true
           )
@@ -2036,26 +2321,38 @@ let border_bottom_row ?(style = "1px solid black") () =
         match !selected_area, !selected_cell with
         | None, None -> Js._true
         | None, Some sel_c -> (
-              let td =
+              let td, td_id =
                 match sel_c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##textAlign = Js.string "left"
-              then td##style##textAlign <- Js.string "initial"
-              else td##style##textAlign <- Js.string "left";
+              then (
+                td##style##textAlign <- Js.string "initial";
+                update_cell_text_align_in_h (key_of_id td_id) "initial"
+              )
+              else (
+                td##style##textAlign <- Js.string "left";
+                update_cell_text_align_in_h (key_of_id td_id) "left"
+              );
               Js._true
           )
         | Some sa, _ -> (
             List.iter (fun (c : cell) ->
-              let td =
+              let td, td_id =
                 match c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##textAlign = Js.string "left"
-              then td##style##textAlign <- Js.string "initial"
-              else td##style##textAlign <- Js.string "left"
+              then (
+                td##style##textAlign <- Js.string "initial";
+                update_cell_text_align_in_h (key_of_id td_id) "initial"
+              )
+              else (
+                td##style##textAlign <- Js.string "left";
+                update_cell_text_align_in_h (key_of_id td_id) "left"
+              )
             ) sa;
           Js._true
           )
@@ -2074,26 +2371,38 @@ let border_bottom_row ?(style = "1px solid black") () =
         match !selected_area, !selected_cell with
         | None, None -> Js._true
         | None, Some sel_c -> (
-              let td =
+              let td, td_id =
                 match sel_c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##textAlign = Js.string "right"
-              then td##style##textAlign <- Js.string "initial"
-              else td##style##textAlign <- Js.string "right";
+              then (
+                td##style##textAlign <- Js.string "initial";
+                update_cell_text_align_in_h (key_of_id td_id) "initial"
+              )
+              else (
+                td##style##textAlign <- Js.string "right";
+                update_cell_text_align_in_h (key_of_id td_id) "right"
+              );
               Js._true
           )
         | Some sa, _ -> (
             List.iter (fun (c : cell) ->
-              let td =
+              let td, td_id =
                 match c with
-                | SingleCell sc -> getElementById sc.id
-                | MergedCell mc -> getElementById mc.id
+                | SingleCell sc -> getElementById sc.id, sc.id
+                | MergedCell mc -> getElementById mc.id, mc.id
               in
               if td##style##textAlign = Js.string "right"
-              then td##style##textAlign <- Js.string "initial"
-              else td##style##textAlign <- Js.string "right"
+              then (
+                td##style##textAlign <- Js.string "initial";
+                update_cell_text_align_in_h (key_of_id td_id) "initial"
+              )
+              else (
+                td##style##textAlign <- Js.string "right";
+                update_cell_text_align_in_h (key_of_id td_id) "right"
+              )
             ) sa;
           Js._true
           )
@@ -2416,6 +2725,7 @@ let border_bottom_row ?(style = "1px solid black") () =
     Hashtbl.iter (fun k c -> ignore @@ %shell_print @@ string_of_cell c) h
 
   let print_h_button () =
+    ignore @@ %shell_print "\nprint_h_button called:\n";
     let btn = createButton document in
     btn##textContent <- Js.some @@ Js.string "Print Hashtable";
     btn##onmouseup <- handler (fun _ -> print_h (); Js._true);

@@ -548,7 +548,8 @@ let () =
             ~ncols:num_sheet_cols
             %sheet_data
         }}
-        in
+      in
+      let _ = {unit{print_h_button ()}} in
       Lwt.return
         (Eliom_tools.F.html
            ~title:sheet_name
@@ -571,6 +572,7 @@ let () =
       let un = user.username in
       let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ?username:%un ()}} in
       let _ = {unit{stop_scrolling ()}} in
+      let _ = {unit{print_h_button ()}} in
       Lwt.return
         (Eliom_tools.F.html
            ~title:"Blank Sheet"

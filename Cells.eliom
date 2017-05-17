@@ -407,8 +407,8 @@
           border_left   = "";   (* TODO: should get from DOM *)
           border_right  = "";  (* TODO: should get from DOM *)
           text_align    = "initial";
-          font_weight   = "";
-          font_style    = ""
+          font_weight   = "normal";
+          font_style    = "normal"
       })
     )
 
@@ -467,8 +467,8 @@
           border_left   = "";
           border_right  = "";
           text_align    = "initial";
-          font_weight   = "";
-          font_style    = ""
+          font_weight   = "normal";
+          font_style    = "normal"
       })
     )
 
@@ -528,8 +528,8 @@
           border_left   = if side = `Left then border else "1px solid black";
           border_right  = if side = `Right then border else "";
           text_align    = "initial";
-          font_weight   = "";
-          font_style    = ""
+          font_weight   = "normal";
+          font_style    = "normal"
       })
     )
 
@@ -589,8 +589,8 @@
           border_left   = "1px solid black";
           border_right  = "";
           text_align    = text_align;
-          font_weight   = "";
-          font_style    = ""
+          font_weight   = "normal";
+          font_style    = "normal"
       })
     )
 
@@ -1175,8 +1175,8 @@
                   ~border_left:""
                   ~border_right:""
                   ~text_align:"initial"
-                  ~font_weight:"initial" (* TODO: get from DOM? *)
-                  ~font_style:"initial" (* TODO: get from DOM? *)
+                  ~font_weight:"normal" (* TODO: get from DOM? *)
+                  ~font_style:"normal" (* TODO: get from DOM? *)
                   ""
               else ();
               replaceChild tr new_td old_td;
@@ -2442,6 +2442,8 @@ let border_bottom_row ?(style = "1px solid black") () =
 
     let li_1 = createLi document in
     let no_border_btn = createButton document in
+    no_border_btn##className <- Js.string "btn btn-default";
+    no_border_btn##id <- Js.string "no_border_btn";
     no_border_btn##innerHTML <- Js.string "None";
     no_border_btn##onmousedown <- handler (fun clk ->
         if clk##button = 0
@@ -2477,6 +2479,8 @@ let border_bottom_row ?(style = "1px solid black") () =
 
     let li_2 = createLi document in
     let reg_border_btn = createButton document in
+    reg_border_btn##className <- Js.string "btn btn-default";
+    reg_border_btn##id <- Js.string "reg_border_btn";
     reg_border_btn##innerHTML <- Js.string "Regular";
     reg_border_btn##onmousedown <- handler (fun clk ->
         if clk##button = 0
@@ -2512,6 +2516,8 @@ let border_bottom_row ?(style = "1px solid black") () =
 
     let li_3 = createLi document in
     let thick_border_btn = createButton document in
+    thick_border_btn##className <- Js.string "btn btn-default";
+    thick_border_btn##id <- Js.string "thick_border_btn";
     thick_border_btn##innerHTML <- Js.string "Thick";
     thick_border_btn##onmousedown <- handler (fun clk ->
         if clk##button = 0

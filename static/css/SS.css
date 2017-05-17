@@ -422,3 +422,21 @@ button#ColorPickerBtn.glyphicon.glyphicon-tint {
     margin: auto;
     border-radius: 5px;
 }
+
+#no_border_btn {
+    width: 100%;
+    border-radius: 0px;
+    border: none;
+}
+
+#reg_border_btn {
+    width: 100%;
+    border-radius: 0px;
+    border: none;
+}
+
+#thick_border_btn {
+    width: 100%;
+    border-radius: 0px;
+    border: none;
+}

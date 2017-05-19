@@ -1,4 +1,5 @@
 (* TODO: Need to escape double quotes when stings are saved!*)
+(* TODO: Add a button to add more rows & columns to the sheet *)
 
 {server{
 
@@ -51,7 +52,8 @@
   (* Parameters *)
   let num_sheet_rows = 10
   let num_sheet_cols = 10
-  let cell_background_color = "#ededed"
+  let cell_background_color = "white"
+  let cell_opacity = "1.0"
 
   (* Currently selected cell *)
   let (selected_cell : cell option ref) = ref None
@@ -1027,7 +1029,8 @@
             td##style##borderBottom    <- Js.string "2px solid black";
             td##style##borderLeft      <- Js.string "3px solid black";
             td##style##borderRight     <- Js.string "2px solid black";
-            td##style##backgroundColor <- Js.string "yellow"
+            td##style##backgroundColor <- Js.string "#66AFE9";
+            td##style##opacity         <- Js.Optdef.return @@ Js.string "0.5"
           )
         | None, false -> (
             selected_cell := cell_of_id (Js.to_string td##id);
@@ -1038,11 +1041,12 @@
           )
         | Some sel_c, true -> (
             selected_cell := cell_of_id (Js.to_string td##id);
-            td##style##borderTop    <- Js.string "3px solid black";
-            td##style##borderBottom <- Js.string "2px solid black";
-            td##style##borderLeft   <- Js.string "3px solid black";
-            td##style##borderRight  <- Js.string "2px solid black";
-            td##style##backgroundColor <- Js.string "yellow";
+            td##style##borderTop       <- Js.string "3px solid black";
+            td##style##borderBottom    <- Js.string "2px solid black";
+            td##style##borderLeft      <- Js.string "3px solid black";
+            td##style##borderRight     <- Js.string "2px solid black";
+            td##style##backgroundColor <- Js.string "#66AFE9";
+            td##style##opacity         <- Js.Optdef.return @@ Js.string "0.5";
             add_to_selected_area !selected_cell
           )
         | Some sel_c, false -> (
@@ -1158,6 +1162,7 @@
               new_td##rowSpan <- width;
               new_td##colSpan <- height;
               new_td##style##backgroundColor <- Js.string cell_background_color;
+              new_td##style##opacity         <- Js.Optdef.return @@ Js.string cell_opacity;
               new_td##onmousedown <- click_handler new_td;
               (*new_td##onkeyup <- f2_handler new_td;*)
               new_td##ondblclick <- dbl_click_handler new_td;
@@ -1248,6 +1253,7 @@
           let td = getElementById sc.id in
           td##textContent            <- (Js.some @@ Js.string sc.txt);
           td##style##backgroundColor <- Js.string sc.color;
+          td##style##opacity         <- Js.Optdef.return @@ Js.string cell_opacity;
           td##style##borderTop       <- Js.string sc.border_top;
           td##style##borderLeft      <- Js.string sc.border_left;
           td##style##textAlign       <- Js.string sc.text_align;
@@ -1261,6 +1267,7 @@
         let td = getElementById mc.id in
         td##textContent            <- (Js.some @@ Js.string (mc.txt));
         td##style##backgroundColor <- Js.string mc.color;
+        td##style##opacity         <- Js.Optdef.return @@ Js.string cell_opacity;
         td##style##borderTop       <- Js.string mc.border_top;
         td##style##borderLeft      <- Js.string mc.border_left;
         td##style##textAlign       <- Js.string mc.text_align;
@@ -1655,7 +1662,8 @@ let border_bottom_row ?(style = "1px solid black") () =
     List.iter (fun c ->
         try
           let td = getElementById (id_of_cell c) in
-          td##style##backgroundColor <- Js.string "yellow"
+          td##style##backgroundColor <- Js.string "#66AFE9";
+          td##style##opacity         <- Js.Optdef.return @@ Js.string "0.5"
         with _ -> () (* TODO: Log error here *)
       ) cl
 
@@ -1667,8 +1675,12 @@ let border_bottom_row ?(style = "1px solid black") () =
           then (
             let old_color = color_of_cell @@ get_cell (key_of_id @@ id_of_cell c) in
             td##style##backgroundColor <- Js.string old_color;
+            td##style##opacity         <- Js.Optdef.return @@ Js.string cell_opacity;
           )
-          else td##style##backgroundColor <- Js.string cell_background_color;
+          else (
+            td##style##backgroundColor <- Js.string cell_background_color;
+            td##style##opacity         <- Js.Optdef.return @@ Js.string cell_opacity;
+          )
         )
         with _ -> () (* TODO: Log error here *)
       ) cl
@@ -1901,7 +1913,8 @@ let border_bottom_row ?(style = "1px solid black") () =
     | Some c ->
       shift_pressed := true;
       let sc = getElementById (id_of_cell c) in
-      sc##style##backgroundColor <- Js.string "yellow";
+      sc##style##backgroundColor <- Js.string "#66AFE9";
+      sc##style##opacity         <- Js.Optdef.return @@ Js.string "0.5";
       selected_area := (
         match !selected_cell with
         | None -> None
@@ -2117,6 +2130,7 @@ let border_bottom_row ?(style = "1px solid black") () =
         try (
           let td = getElementById (id_of_cell sc) in
           td##style##backgroundColor <- Js.string color;
+          td##style##opacity         <- Js.Optdef.return @@ Js.string cell_opacity;
           update_cell_color_in_h (key_of_id @@ Js.to_string td##id) color
         )
         with _ -> () (* TODO: Log error here *)
@@ -2126,6 +2140,7 @@ let border_bottom_row ?(style = "1px solid black") () =
           try (
             let td = getElementById (id_of_cell c) in
             td##style##backgroundColor <- Js.string color;
+            td##style##opacity         <- Js.Optdef.return @@ Js.string cell_opacity;
             update_cell_color_in_h (key_of_id @@ Js.to_string td##id) color
           )
           with _ -> () (* TODO: Log error here *)

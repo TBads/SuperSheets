@@ -253,6 +253,24 @@ td {
    margin-bottom: auto;
 }
 
+#MergeCellsDiv {
+   width: 50px;
+   height: 40px;
+   display: inline-block;
+   float: left;
+   margin-top: 4px;
+   margin-left: 2px;
+   margin-right: 2px;
+   margin-bottom: auto;
+}
+
+#MergeCellsBtn {
+   width: 70px;
+   height: 35px;
+   border: none;
+   background: none;
+}
+
 button#ColorPickerBtn.glyphicon.glyphicon-tint {
   font-size: 20px
 }

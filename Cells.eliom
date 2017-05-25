@@ -2568,6 +2568,24 @@ let border_bottom_row ?(style = "1px solid black") () =
     appendChild div ul;
     div
 
+  let merge_selected_area () =
+    match !selected_area with
+    | None -> ()
+    | Some sa -> merge_area ~blank_cell:true sa
+
+  let merge_cells_button () =
+    let div = createDiv document in
+    div##id <- Js.string "MergeCellsDiv";
+
+    let btn = createButton ?_type:(Some (Js.string "button")) document in
+    btn##onmouseup <- handler (fun _ -> merge_selected_area (); Js._true);
+    btn##className <- Js.string "btn btn-default";
+    btn##id <- Js.string "MergeCellsBtn";
+    btn##innerHTML <- Js.string "Merge";
+
+    appendChild div btn;
+    div
+
   (* Toolbar with Buttons *)
   let toolbar ?username ?sheet_name () =
     let toolbar = createDiv document in
@@ -2587,6 +2605,7 @@ let border_bottom_row ?(style = "1px solid black") () =
     appendChild toolbar (center_text_button ());
     appendChild toolbar (right_align_text_button ());
     appendChild toolbar (border_dropdown ());
+    appendChild toolbar (merge_cells_button ());
     toolbar
 
   (* Create a new & empty cell *)
@@ -2716,11 +2735,6 @@ let border_bottom_row ?(style = "1px solid black") () =
 
   (* TODO: Ther user should be able to select a single merged cell and click the merge button *)
   (* to un-merge the cell                                                                     *)
-
-  let merge_selected_area () =
-    match !selected_area with
-    | None -> ()
-    | Some sa -> merge_area ~blank_cell:true sa
 
   let merge_area_button () =
     let btn = createButton document in

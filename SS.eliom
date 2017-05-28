@@ -302,7 +302,6 @@ let () =
      let un = user.username in
      let _ = {unit{fresh_table ~nrows:num_sheet_rows ~ncols:num_sheet_cols ?username:%un ()}} in
      let _ = {unit{load_button ()}} in
-     let _ = {unit{merge_area_button ()}} in
      let _ = {unit{print_h_button ()}} in
      let _ = {unit{stop_scrolling ()}} in
      let _ = {unit{stop_default_right_click ()}} in

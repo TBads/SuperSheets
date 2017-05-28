@@ -1,5 +1,6 @@
-(* TODO: Need to escape double quotes when stings are saved!*)
+(* TODO: Need to escape double quotes when stings are saved!  *)
 (* TODO: Add a button to add more rows & columns to the sheet *)
+(* TODO: Need merge to un-merge already merged cells          *)
 
 {server{
 
@@ -296,9 +297,6 @@
       not_found -> (ignore @@ %shell_print "\nnot_found"; "")
 
   let store_cell (key : int * int) (value : cell) =
-    ignore @@ %shell_print "\n\nstore_cell:\n";
-    ignore @@ %shell_print "\n";
-    ignore @@ %shell_print @@ string_of_cell value;
     if Hashtbl.mem h key
     then Hashtbl.replace h key value
     else Hashtbl.add h key value
@@ -474,8 +472,6 @@
     )
 
   let update_cell_border_in_h ~side (key : int * int) (border : string) =
-    ignore @@ %shell_print "\nupdate_cell_border_in_h:\n";
-    ignore @@ %shell_print ("   key = "^(string_of_int @@ fst key)^", "^(string_of_int @@ snd key));
     if Hashtbl.mem h key
     then (
       let old_cell = Hashtbl.find h key in
@@ -535,8 +531,6 @@
     )
 
   let update_cell_text_align_in_h (key : int * int) (text_align : string) =
-    ignore @@ %shell_print "\nupdate_cell_text_align_in_h:\n";
-    ignore @@ %shell_print ("   key = "^(string_of_int @@ fst key)^", "^(string_of_int @@ snd key));
     if Hashtbl.mem h key
     then (
       let old_cell = Hashtbl.find h key in
@@ -596,8 +590,6 @@
     )
 
   let update_cell_font_weight_in_h (key : int * int) (font_weight : string) =
-    ignore @@ %shell_print "\nupdate_cell_font_weight_in_h:\n";
-    ignore @@ %shell_print ("   key = "^(string_of_int @@ fst key)^", "^(string_of_int @@ snd key));
     if Hashtbl.mem h key
     then (
       let old_cell = Hashtbl.find h key in
@@ -657,8 +649,6 @@
     )
 
   let update_cell_font_style_in_h (key : int * int) (font_style : string) =
-    ignore @@ %shell_print "\nupdate_cell_font_style_in_h:\n";
-    ignore @@ %shell_print ("   key = "^(string_of_int @@ fst key)^", "^(string_of_int @@ snd key));
     if Hashtbl.mem h key
     then (
       let old_cell = Hashtbl.find h key in
@@ -801,24 +791,20 @@
       Hashtbl.fold (fun k v acc -> acc ^ (json_of_cell v) ^ ",") h "{"
       |> fun json_string -> String.sub json_string 0 (String.length json_string - 1)
     in
-    ignore @@ %shell_print "\n\nss_string:";
-    ignore @@ %shell_print (json_content ^ "}");
     json_content ^ "}"
 
   (* Parse a spreadsheet string into a ((int * int), cell) list *)
   let parse_ss_string (ss_string : string) =
-    ignore @@ %shell_print "\n\nparse_ss_string:\n";
   (*let () =
       Yojson.Basic.from_string ss_string
       |> Yojson.Basic.Util.to_assoc
       |> List.map cell_of_json
       |> List.iter (fun c -> ignore @@ %shell_print @@ string_of_cell c)
     in*)
-    ignore @@ %shell_print ("\n\nss_string =\n" ^ ss_string);
     let point_1 = Yojson.Basic.from_string ss_string in
     let point_2 = Yojson.Basic.Util.to_assoc point_1 in
     let point_3 = List.map cell_of_json point_2 in
-    List.iter (fun c -> ignore @@ %shell_print @@ string_of_cell c) point_3;
+    (*List.iter (fun c -> ignore @@ %shell_print @@ string_of_cell c) point_3;*)
     Yojson.Basic.from_string ss_string
     |> Yojson.Basic.Util.to_assoc
     |> List.map cell_of_json
@@ -1156,8 +1142,8 @@
               let tr = getElementById ("row_" ^ (string_of_int @@ t_row c)) in
               let old_td = getElementById @@ id_of_cell c in
               let new_td = createTd document in
-              new_td##rowSpan <- width;
-              new_td##colSpan <- height;
+              new_td##rowSpan <- height;
+              new_td##colSpan <- width;
               new_td##style##backgroundColor <- Js.string cell_background_color;
               new_td##onmousedown <- click_handler new_td;
               (*new_td##onkeyup <- f2_handler new_td;*)
@@ -1309,7 +1295,6 @@
     )
 
   let show_save_confirm_modal msg =
-    ignore @@ %shell_print "\n\nshow_save_confirm_modal\n\n";
     let div = createDiv document in
     let msg_div = createDiv document in
     div##id <- Js.string "save_confirm_modal";
@@ -2724,24 +2709,14 @@ let border_bottom_row ?(style = "1px solid black") () =
     )
 
 
-    (* Load a table populated with data *)
-    let load_table_with_data ?username ~nrows ~ncols ss_string =
-      fresh_table ?username ~nrows:num_sheet_rows ~ncols:num_sheet_cols ();
-      let (kv_list : ((int * int) * cell) list) =
-        parse_ss_string ss_string |> List.map (fun c -> ((key_of_cell c), c))
-      in
-      replace_h kv_list;
-      Hashtbl.iter (fun (k : int * int) (v : cell) -> update_td k v) h
-
-  (* TODO: Ther user should be able to select a single merged cell and click the merge button *)
-  (* to un-merge the cell                                                                     *)
-
-  let merge_area_button () =
-    let btn = createButton document in
-    btn##textContent <- Js.some @@ Js.string "Merge Cells";
-    btn##onmouseup <- handler (fun _ -> merge_selected_area (); Js._true);
-    let body = document##body in
-    appendChild body btn
+  (* Load a table populated with data *)
+  let load_table_with_data ?username ~nrows ~ncols ss_string =
+    fresh_table ?username ~nrows:num_sheet_rows ~ncols:num_sheet_cols ();
+    let (kv_list : ((int * int) * cell) list) =
+      parse_ss_string ss_string |> List.map (fun c -> ((key_of_cell c), c))
+    in
+    replace_h kv_list;
+    Hashtbl.iter (fun (k : int * int) (v : cell) -> update_td k v) h
 
   let print_h () =
     ignore @@ %shell_print "Hashtbl h = \n";
